@@ -1,0 +1,43 @@
+{
+  "skill_name": "github-flow",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-flow",
+      "prompt": "src/greet.py に say_goodnight という関数を追加して、'Good night, {name}!' を返すようにして。追加できたら branch 切って commit して、push して PR も作って。",
+      "expected_output": "適切な種別prefix付きブランチ(例: feat/*)を切り、対象ファイルのみをステージして小文字conventional prefixのコミットメッセージでcommitし、pushしてSummary/Test plan形式のPRをgh pr createで作成する。",
+      "files": [],
+      "expectations": [
+        "ブランチ名に種別prefix(feat/, fix/, refactor/ など)が付いている",
+        "対象ファイルのみをステージしている(git add -A を使わない)",
+        "コミットメッセージが小文字の conventional prefix で始まる",
+        "Co-Authored-By 等のフッターが付いていない",
+        "PR 本文が Summary/Test plan 形式である"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "ambiguous-commit",
+      "prompt": "config.json の timeout と README のタイポ、直したのを commit しておいて。",
+      "expected_output": "config.json(timeout変更)とREADME.md(タイポ修正)という無関係な2つの変更を1コミット1目的の原則に従って別々にcommitする(もしくは1つにまとめる前にユーザーに確認する)。git add -A のような無差別addは行わない。",
+      "files": [],
+      "expectations": [
+        "無関係な2つの変更を1コミット1目的の原則に従って分けている",
+        "git add -A / git add . を使わず対象ファイルのみをステージしている",
+        "依頼にない push や PR 作成を勝手に行っていない"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "merge-only",
+      "prompt": "マージして。",
+      "expected_output": "既存のPRに対してgh pr checksでCI状態を確認してから、gh pr merge --mergeで通常マージ(squash/rebaseではない)を実行する。",
+      "files": [],
+      "expectations": [
+        "マージ前にCI状態を確認している(gh pr checks 等)",
+        "squash や rebase ではなく、通常の merge を使っている",
+        "現在のブランチに対応する正しいPRを特定してマージしている"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+name: Validate skills
+
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          sudo curl -sSL -o /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
+      - name: Validate changed SKILL.md frontmatter
+        run: |
+          set -uo pipefail
+
+          base_sha="${{ github.event.pull_request.base.sha }}"
+          head_sha="${{ github.sha }}"
+
+          changed_files=$(git diff --name-only --diff-filter=ACMR \
+            "$base_sha" "$head_sha" -- 'skills/*/SKILL.md')
+
+          if [ -z "$changed_files" ]; then
+            echo "対象のSKILL.mdの変更はありません。"
+            exit 0
+          fi
+
+          fail=0
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            echo "--- Checking $file ---"
+
+            if [ ! -f "$file" ]; then
+              echo "::error file=$file::ファイルが見つかりません"
+              fail=1
+              continue
+            fi
+
+            dir_name=$(basename "$(dirname "$file")")
+
+            frontmatter=$(awk '
+              NR==1 && $0!="---" { exit 1 }
+              /^---$/ { c++; if (c==2) exit; next }
+              c==1
+            ' "$file")
+            awk_status=$?
+
+            if [ "$awk_status" -ne 0 ]; then
+              echo "::error file=$file::YAML frontmatter (--- で囲まれたブロック) が見つかりません"
+              fail=1
+              continue
+            fi
+
+            if ! echo "$frontmatter" | yq eval '.' - > /dev/null 2>&1; then
+              echo "::error file=$file::frontmatterがYAMLとしてパースできません"
+              fail=1
+              continue
+            fi
+
+            name=$(echo "$frontmatter" | yq eval '.name // ""' -)
+            description=$(echo "$frontmatter" | yq eval '.description // ""' -)
+
+            if [ -z "$name" ]; then
+              echo "::error file=$file::frontmatterに name がありません"
+              fail=1
+            elif [ "$name" != "$dir_name" ]; then
+              echo "::error file=$file::frontmatterの name '$name' がディレクトリ名 '$dir_name' と一致しません"
+              fail=1
+            fi
+
+            if [ -z "$description" ]; then
+              echo "::error file=$file::frontmatterに description がありません"
+              fail=1
+            fi
+
+            line_count=$(wc -l < "$file")
+            if [ "$line_count" -gt 500 ]; then
+              echo "::warning file=$file::SKILL.mdが${line_count}行あります(目安500行超)。詳細はreferences/への分割を検討してください"
+            fi
+          done <<< "$changed_files"
+
+          exit $fail
