@@ -1,0 +1,18 @@
+# rumdl configuration file
+
+[global]
+# 日本語の文章は1行1段落で書く方針のため、行長制限は無効化する
+disable = ["MD013"]
+
+exclude = [
+    ".git",
+    ".github",
+    "node_modules",
+    "vendor",
+    "dist",
+    "build",
+    "CHANGELOG.md",
+    "LICENSE.md",
+]
+
+respect-gitignore = true
