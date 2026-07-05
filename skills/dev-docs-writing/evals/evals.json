@@ -1,0 +1,79 @@
+{
+  "skill_name": "dev-docs-writing",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-adr",
+      "prompt": "DBをPostgresからMySQLに変えることにしたので、ADRとして残して。理由はマネージドサービスの運用コスト削減。Aurora PostgresのままRIで割引を受ける案も検討したけど却下した。",
+      "expected_output": "ADRテンプレートに沿って、Owner/Last reviewed/Status/Context/Decision/Consequences/却下した代替案(Aurora PostgresのRI割引案とその却下理由)を含む文書を作成する。",
+      "files": [],
+      "expectations": [
+        "Owner と Last reviewed のメタデータが含まれている",
+        "Status(Proposed/Accepted等)が明記されている",
+        "Context/Decision/Consequencesの3節が揃っている",
+        "却下した代替案(Aurora PostgresのRI割引案)とその理由が書かれている"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "review-wiki",
+      "prompt": "このWikiページをレビューして、問題点を指摘して。\n\n---\n# デプロイ手順\n\nこのシステムのデプロイフローを掘り下げる。本番環境の設定管理は不可欠だ。\n\n1. ビルドする\n2. デプロイする\n---",
+      "expected_output": "オーナー・最終レビュー日の欠如、WHO/WHAT/WHEN/WHERE/WHYが無いこと、LLM的表現(「掘り下げる」「不可欠」)を、該当箇所を引用しながら指摘する。無断で全文を書き換えたバージョンだけを返さない。",
+      "files": [],
+      "expectations": [
+        "オーナー・最終レビュー日が無いことを指摘している",
+        "「掘り下げる」「不可欠」等の空虚な表現を指摘している",
+        "該当箇所を引用した指摘+改善案の形式になっている",
+        "指示なく書き換え済みの全文だけを返していない"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "runbook-order",
+      "prompt": "このRunbookをレビューして。\n\n---\n# API 5xxエラー急増\n\n## Mitigation\nPodを再起動する: kubectl rollout restart deployment/api\n\n## Diagnosis\nダッシュボードでエラー率を確認する。\n---",
+      "expected_output": "症状(Symptom)の欠如、診断(Diagnosis)より先に緩和(Mitigation)が書かれている順序違反、Podの再起動という副作用のあるコマンドに警告が付いていないことを指摘する。",
+      "files": [],
+      "expectations": [
+        "Symptom(症状)セクションが無いことを指摘している",
+        "Diagnosis より先に Mitigation が書かれている順序違反を指摘している",
+        "副作用のあるコマンド(Pod再起動)に警告が無いことを指摘している"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "doc-type-selection",
+      "prompt": "新しいバッチ処理の入出力関係を図にして残したい。",
+      "expected_output": "Wiki/ADR/Runbookのテンプレートではなく、アーキテクチャ図・データフロー図のテンプレート(assets/architecture-diagram-template.md)を提案し、Mermaid等によるdiagram as codeでの保持を勧める。",
+      "files": [],
+      "expectations": [
+        "アーキテクチャ図・データフロー図のテンプレートを提案している",
+        "Wiki/ADR/Runbookのテンプレートを誤って提案していない",
+        "diagram as code(Mermaid等のテキスト形式)での保持を提案している"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "design-doc-vs-adr",
+      "prompt": "新しい通知基盤を作ることになった。まだ何も実装していないけど、複数チームが絡むので設計を合意したい。",
+      "expected_output": "個別の技術判断の記録であるADRではなく、実装前の設計合意を目的とするDesign Docのテンプレート(assets/design-doc-template.md)を提案する。Goals/Non-Goals・代替案(Alternatives Considered)・横断的関心事を含む構成を示す。",
+      "files": [],
+      "expectations": [
+        "Design Docテンプレートを提案している",
+        "ADRではなくDesign Docを選んだ理由(複数チーム/実装前の合意形成)を示している",
+        "Goals/Non-Goalsと代替案(Alternatives Considered)の節を含めている"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "api-doc-review",
+      "prompt": "このAPIドキュメントをレビューして。\n\n---\n## ユーザーを作成する\n\nPOST /api/v1/users\n\nRedisにキャッシュしてから非同期でDBに書き込む設計にした。理由はレイテンシ削減のため。\n\n### レスポンス\n201: { \"id\": \"string\" }\n---",
+      "expected_output": "設計判断(Redisキャッシュを採用した理由)がAPIドキュメントに混入していることを指摘し、Design DocまたはADRへの切り出しを提案する。レスポンス例がダミー型名(\"string\")になっている点も指摘する。",
+      "files": [],
+      "expectations": [
+        "設計判断の記述がAPIドキュメントに混入していることを指摘している",
+        "Design DocまたはADRへの切り出しを提案している",
+        "レスポンス例がダミー型名になっていることを指摘している"
+      ]
+    }
+  ]
+}
