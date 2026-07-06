@@ -1,0 +1,59 @@
+{
+  "skill_name": "data-platform-architecture",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-snowflake-platform-design",
+      "prompt": "SaaS(Salesforce)と自社サービスのPostgresからデータを集めて、経営ダッシュボードとアナリストのアドホック分析に使うデータ基盤をSnowflake中心で設計して。データは今1TBくらいで年2倍ペース、ダッシュボードは日次更新でよい。チームはSQLは強いけどPythonとTerraformは初心者が多い。",
+      "expected_output": "要件をヒアリング・整理した上で、design-doc-template.mdに沿った設計書(要件サマリ/C4のContext図とContainer図/構成要素と選定理由/主要設計判断/検証記録)を出力する。主要設計判断には失敗条件と却下した代替案が判断ごとに記載され、成果物確定前にバイアス排除検証(独立レビューまたはコールドリビュー)が実施され、その結果が検証記録に残る。",
+      "files": [],
+      "expectations": [
+        "設計書に要件サマリ(ワークロード/データ量/鮮度SLO/チームスキル)が含まれている",
+        "MermaidのC4図(ContextとContainer)が埋め込まれている",
+        "主要設計判断ごとに失敗条件と却下した代替案が明文化されている",
+        "バイアス排除検証が実施され、指摘への対応/見送りが検証記録に残っている",
+        "チームスキル(Python/Terraform初心者)を考慮した構成・段階導入になっている"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "review-antipattern-config",
+      "prompt": "うちのSnowflake構成をレビューして。\n\n- ウェアハウスは2XLが1つ。ETL、BIダッシュボード、アナリストのアドホックが全部これを使う。auto-suspendは無効(キャッシュを消したくないので)\n- クエリが遅い時はマルチクラスタの上限を増やして対応している\n- ロールは全員ACCOUNTADMIN(権限エラーで作業が止まらないように)\n- dbtのstagingモデルはSELECT *で書いている",
+      "expected_output": "review-comment-template.mdの形式で、スコアカード(5柱+チームスキル適合性)、Severity順の指摘(単一巨大WH集約、auto-suspend未設定、マルチクラスタの誤用、ACCOUNTADMIN日常利用、SELECT *)、Strengths、総合判定を出力する。ACCOUNTADMINの件はCRITICALまたはHIGH相当として扱われる。",
+      "files": [],
+      "expectations": [
+        "スコアカード(5柱+チームスキル適合性、✅/⚠️/❌)が含まれている",
+        "単一巨大ウェアハウスへの全ワークロード集約がアンチパターンとして指摘されている",
+        "全員ACCOUNTADMINが重大な問題(CRITICAL/HIGH)として指摘されている",
+        "マルチクラスタは同時実行対策であり遅いクエリ対策にならないことが指摘されている",
+        "各指摘がFinding/Impact/Recommendation/Effortの形式で、StrengthsとApprove/条件付き/差し戻しの総合判定がある"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "rbac-design-consultation",
+      "prompt": "SnowflakeのRBAC設計を考えてほしい。部署は営業・マーケ・経理の3つで、それぞれ自部署のマートだけ見られるようにしたい。dbtとFivetranのサービスアカウントもある。",
+      "expected_output": "Access Roles/Functional Roles/Service Rolesの3層(Role of Three)に基づくロール設計を提示する。Access Roleをユーザーに直接付与しない、Functional RoleをSYSADMINに付与する、ACCOUNTADMINを自動化に使わない、SELECT権限とウェアハウスUSAGEをペアで付与する、といった原則が反映される。範囲がRBACに限定されていてもバイアス排除検証(層2の反証明文化など)は省略されない。",
+      "files": [],
+      "expectations": [
+        "Access/Functional/Serviceの3層構造(Role of Three)でロール階層が設計されている",
+        "dbt/Fivetran用にService Role(専用の限定ロール)が払い出され、ACCOUNTADMINを使っていない",
+        "Access Roleをエンドユーザーに直接付与しない方針が明示されている",
+        "主要な設計判断に失敗条件または却下した代替案が記載されている"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "non-snowflake-platform",
+      "prompt": "BigQuery中心でデータ基盤を設計してほしい。ソースはGA4とCloud SQL、用途はマーケ分析ダッシュボード。",
+      "expected_output": "汎用の設計プロセス(要件ヒアリング→構成決定→C4図→設計書→バイアス排除検証)で進める。review-lens.mdの汎用原則(ワークロード分離、コスト可視化、冪等性等)を適用しつつ、Snowflake固有機能(Dynamic Tables、Snowpipe等)を押し付けない。BigQuery固有機能の詳細知識は重点範囲外である旨を成果物に明示する。",
+      "files": [],
+      "expectations": [
+        "Snowflake固有の機能や用語を前提とした設計になっていない",
+        "汎用的な設計プロセス(要件整理・C4図・設計書テンプレート)が適用されている",
+        "BigQuery固有の詳細はこのskillの重点範囲外である旨の注記がある",
+        "バイアス排除検証のプロセスが省略されていない"
+      ]
+    }
+  ]
+}
