@@ -11,6 +11,9 @@ PRでレビュー・バージョン管理する。画像ファイルとして別
 Mermaidフェンスではなく `references/azure-devops-wiki-guide.md` のフェンス記法に
 置き換える。
 
+Mermaid記法そのもの(構文エラーの回避・GitHub/GitLab等での描画互換性・大規模図の
+レイアウト)については[mermaid-diagrams](../../mermaid-diagrams/SKILL.md)を参照する。
+
 ## C4モデル
 
 C4モデル(Context / Container / Component / Code の4階層)を使うと、詳細度の異なる

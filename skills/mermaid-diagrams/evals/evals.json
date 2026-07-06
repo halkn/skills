@@ -1,0 +1,81 @@
+{
+  "skill_name": "mermaid-diagrams",
+  "evals": [
+    {
+      "id": 1,
+      "name": "diagram-type-selection-sequence",
+      "prompt": "ユーザーがログインするときの、ブラウザ・認証API・リソースサーバの間のやり取りを時系列でわかるように図にして。",
+      "expected_output": "flowchartやER図ではなくsequenceDiagramを選び、参加者(ブラウザ/認証API/リソースサーバ)の宣言順とメッセージの矢印で時系列のやり取りを表現する。",
+      "files": [],
+      "expectations": [
+        "sequenceDiagramを使っている(flowchart/erDiagramではない)",
+        "参加者(browser/認証API/リソースサーバ相当)が宣言されている",
+        "時系列のメッセージ矢印で表現されている"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "fix-classic-syntax-errors",
+      "prompt": "このMermaidの構文エラーを直して。\n\n```mermaid\nflowchart TD\n    default[Start] --> A(Process (init))\n    A --> end\n```",
+      "expected_output": "予約語end(小文字)の使用、ノードID`default`、ラベル内の丸括弧が未クォートである3点を修正する。ノードIDは安全なID+別ラベルに分離し、endは大文字化するか別名に変更し、括弧を含むラベルはダブルクォートで囲む。",
+      "files": [],
+      "expectations": [
+        "小文字の予約語endをそのまま残していない",
+        "ノードIDとして`default`をそのまま使っていない",
+        "丸括弧を含むラベルがダブルクォートで囲まれている",
+        "修正後の図が構文的に妥当である"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "github-readme-compatibility",
+      "prompt": "READMEに載せるAWS構成図を作って。GitHub上でちゃんと表示されるようにしたい。EC2・RDS・S3の構成。",
+      "expected_output": "architecture-betaのカスタムIconifyアイコン(registerIconPacks)やC4記法を避け、flowchartまたはarchitecture-betaの組み込み5種アイコン(cloud/database/disk/internet/server)のみを使うなど、GitHubの描画互換性を考慮した選択をする。GitHubのMermaidレンダラーがcore最新版に追随していない点にも触れる。",
+      "files": [],
+      "expectations": [
+        "registerIconPacksが必要なカスタムアイコンを使っていない",
+        "C4記法(実験的でGitHub非対応の報告がある)を使っていない",
+        "GitHubのレンダラーがMermaid coreの最新版と乖離している旨に触れている"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "large-diagram-readability-review",
+      "prompt": "このMermaid図、見づらいのでレビューして。\n\n```mermaid\nflowchart TB\n  subgraph Network\n    direction LR\n    LB --> FW --> GW\n  end\n  subgraph Compute\n    API1 --> API2 --> API3 --> Worker1 --> Worker2\n  end\n  subgraph Data\n    DB1 --> DB2 --> Cache --> Queue --> Blob\n  end\n  Network --> Compute --> Data\n  API1 --> DB1\n  API2 --> Cache\n  Worker1 --> Queue\n  Worker2 --> Blob\n  FW --> DB2\n```",
+      "expected_output": "ノード数が~12の目安を超えていること、Network/Compute/Dataという複数の関心事が1図に混在していることを指摘し、関心事ごとの分割を提案する。subgraphの`direction`指定(LR)が外部ノードとリンクされている場合に無視される等、信頼できない既知の問題にも触れる。",
+      "files": [],
+      "expectations": [
+        "ノード数が多すぎる(目安12個超)ことを指摘している",
+        "Network/Compute/Dataなど複数の関心事の混在を指摘し分割を提案している",
+        "subgraphのdirection指定が信頼できない(既知のレンダリング上の問題)ことに触れている"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "validate-then-fix-loop",
+      "prompt": "このdiagram.mmdを検証して、レンダリングできるか確認して。問題があれば直して。",
+      "expected_output": "scripts/validate.shを使ってmmdcによる構文検証を行い、失敗した場合はエラー内容から原因(構文エラー)を特定して修正し、再検証してrenderが通ることを確認してから完了と報告する。mmdc/npxが環境に無い場合は、クラッシュせずインストール手順を提示する。",
+      "files": [
+        { "path": "diagram.mmd", "content": "flowchart TD\n    A --> end\n" }
+      ],
+      "expectations": [
+        "scripts/validate.shまたはmmdcによる検証を実行している",
+        "検証失敗時にエラー内容を根拠に修正している",
+        "修正後に再検証してから完了と報告している(未検証のまま完了と言っていない)",
+        "mmdc/npxが無い場合でもクラッシュせずインストール手順を示す(該当する場合)"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "theming-with-classdef",
+      "prompt": "このMermaid図に色を付けたい。ノードAを青、ノードBを赤にして、全体のテーマも変えたい。",
+      "expected_output": "個別ノードへのインラインstyle指定ではなく、classDef+class(または`:::`)を使って再利用可能な形でスタイルを付与し、色は色名ではなく16進数で指定する。themeVariablesを使う場合は`theme: base`と組み合わせる必要がある点に触れる。",
+      "files": [],
+      "expectations": [
+        "インラインstyleではなくclassDef+classを使っている",
+        "色指定が色名ではなく16進数になっている",
+        "themeVariablesを使う場合はtheme:baseと組み合わせている(該当する場合)"
+      ]
+    }
+  ]
+}
