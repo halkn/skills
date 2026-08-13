@@ -6,27 +6,29 @@ Claude Code 用の Agent Skill 群を一箇所で開発・レビューし、[`gh
 
 ## クイックスタート
 
-新しいマシンで、このリポジトリが公開しているすべてのskillをClaude Code用にインストールする:
+このリポジトリのskillをすべてインストールする（Claude Codeのユーザースコープ = マシン全体で有効）:
 
 ```bash
 gh skill install halkn/skills --agent claude-code --scope user --all
 ```
 
-特定のskillだけ、特定バージョンでインストールする場合:
+インストール済みskillを最新に更新する:
 
 ```bash
-gh skill install halkn/skills "skills/<name>@vX.Y.Z" --agent claude-code --scope user
+gh skill update --all
 ```
 
-定期的に(当面は手動で)最新リリースを取り込む:
+特定のskillだけ試す・中身を確認する:
 
 ```bash
-gh skill update --agent claude-code --scope user
+gh skill install halkn/skills skills/git-flow --agent claude-code --scope user
+gh skill preview halkn/skills skills/git-flow
 ```
 
-> [!IMPORTANT]
-> `main` ブランチではなく、必ずタグ/リリースからインストール・更新してください。
-> `main` は開発中・レビュー中の変更を含む場合があり、安定性が保証されません。
+> [!NOTE]
+> バージョンを指定しない場合、`gh skill` は「最新のタグ付きリリース → デフォルトブランチのHEAD」の
+> 順で解決します（`gh` 2.97.0 で確認）。このリポジトリはまだタグを切っていないため、現状は `main` の
+> HEAD が入ります。特定の状態に固定したい場合は `--pin <tag-or-sha>` を使ってください。
 
 ## 保有スキル一覧
 
@@ -36,7 +38,7 @@ gh skill update --agent claude-code --scope user
 
 ## 開発フロー
 
-新しいskillの追加・既存skillの改善・リリース手順は、すべて
+新しいskillの追加・既存skillの改善手順は
 [`.claude/skills/skill-development/SKILL.md`](.claude/skills/skill-development/SKILL.md) にまとまっています。
 このリポジトリで作業する場合はまずそちらを参照してください。
 このskill自体はこのリポジトリの開発運用専用であり、`skills/`配下には置かず(`gh skill`での配布対象にせず)、

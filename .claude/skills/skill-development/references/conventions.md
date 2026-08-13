@@ -8,7 +8,7 @@
 - ディレクトリ名は `skills/<skill-name>/` の形。`<skill-name>` は小文字・数字・
   ハイフンのみ(kebab-case)。例: `pdf-fill-form`, `skill-development`。
 - frontmatterの `name` は、ディレクトリ名と**完全一致**させる。この一致は
-  `.github/workflows/validate-skills.yml` でCI検証される。
+  `scripts/validate-skill-frontmatter.sh`（CIとローカルフックで共有）で検証される。
 - `gh skill install owner/repo skills/<name>` はこのディレクトリ構造を前提に
   スキルを解決するため、不一致があるとインストールに失敗する。
 
@@ -38,8 +38,8 @@ description: >
   「詳細は references/xxx.md を参照」とだけリンクする。
 - `SKILL.md` は常に読み込まれる前提のファイル、`references/` は必要になった
   ときだけ読みに行くファイル、という役割分担を意識する。
-- CIはこの行数を超えても失敗させない(非ブロッキング警告のみ)。強制分割が
-  かえって読みにくくなるケースもあるため、最終判断はレビュアーに委ねる。
+- 行数はCIで検証しない。強制分割がかえって読みにくくなるケースもあるため、
+  最終判断はレビュアーに委ねる。
 
 ## scripts/ と assets/
 

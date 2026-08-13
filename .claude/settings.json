@@ -1,4 +1,11 @@
 {
+  "sandbox": {
+    "filesystem": {
+      "allowRead": [
+        "./"
+      ]
+    }
+  },
   "hooks": {
     "PostToolUse": [
       {
