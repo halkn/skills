@@ -28,7 +28,7 @@ description: ブランチ作成から commit・push・PR 作成・マージま�
 
 作業の開始前と終了時に `git status --short` を確認する。開始前の確認は「ユーザーの未コミット変更が既にあるか」を知るため、終了時の確認は「意図しないファイルを巻き込んでいないか」を知るためで、目的が違うので両方行う。
 
-1. **ブランチを作成する** — 作業前に必ず作る。`git switch -c <branch>` で、main/master 上で直接作業を始めない
+1. **ブランチを作成する** — 作業前に必ず作る。`git switch -c <branch>` で、main/master 上で直接作業を始めない。命名は下記「ブランチ名」に従う
 1. **実装する**
 1. **差分を確認する** — `git status --short` と `git diff` を見て、意図した変更だけが含まれているか確かめる。ここで初めて気づく巻き込みは珍しくない
 1. **コミットする** — 自分が変更したファイルだけを明示的に `git add` する。下記の粒度・メッセージ規約に従う
@@ -52,6 +52,35 @@ git remote -v
 `github.com` 以外（Azure Repos・GitLab・社内の自前ホスティング）だった場合、PR 作成の CLI も issue の紐付け記法も違う。推測で `gh` を叩かず、ユーザーに確認する。誤ったホストの CLI は失敗するだけで済むが、記法を誤ったコミットは履歴に残る。
 
 同一セッション内でも、リポジトリを跨いだら確認をやり直す。
+
+## ブランチ名
+
+`<種別>/<内容>` の形。種別は変更の性質から選び、内容は kebab-case の短い英語にする。
+
+```text
+feat/inline-images
+fix/statusline-right-align
+refactor/rules-to-skill
+docs/claude-md-conciseness
+chore/bump-lockfile
+```
+
+種別は `feat` / `fix` / `refactor` / `docs` / `chore` を基本にする。コミットメッセージの prefix と揃えると、ブランチと履歴の対応が追える。
+
+`git branch -a` で既存のブランチ名を見て、そのリポジトリの慣習が違えばそちらに合わせる。ここに書いた規約はデフォルト。
+
+## 複数 worktree がある場合
+
+1 リポジトリに複数の worktree があり得る。作業を始める前に確認する。
+
+```bash
+git worktree list
+```
+
+- **自分がどの worktree にいるかを取り違えない。** パスが似ているため、`git status` の結果を別の作業場のものと混同しやすい。判断に迷ったら `git rev-parse --show-toplevel` で現在地を確定する
+- **他の worktree が使用中のブランチには切り替えられない。** `git switch` は `fatal: '<branch>' is already used by worktree at '<path>'` で失敗する。`--ignore-other-worktrees` で無理に通さず、別のブランチ名で作業を始めるか、ユーザーに確認する
+- 他の worktree にある未コミット変更には触れない。ユーザーが並行して作業している可能性がある
+- `git worktree remove` / `git worktree prune` と、worktree が使用中のブランチの削除は事前に確認する（ガードレール）
 
 ## コミット対象の選び方
 
