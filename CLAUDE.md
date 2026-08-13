@@ -59,8 +59,12 @@ shuck format --check .
 ryl check .
 ```
 
-新しいshellscriptを書いたら `shuck format <file>` で整形してからコミットする。設定ファイル
-(`shuck.toml`/`.ryl.toml`)は置かず、両ツールの既定ルールに従う。
+新しいshellscriptを書いたら `shuck format <file>` で整形してからコミットする。
+
+`shuck.toml`(Google Shell Style Guide準拠)と`.ryl.toml`はリポジトリ直下に置く。どちらのツールも
+ユーザーグローバル設定とプロジェクト設定をマージせず、設定が無いと既定のルールが空
+(`ryl`)・別のスタイル(`shuck`のタブ整形)になるため、リポジトリ側に持たないとCIとローカルで
+結果がずれる。
 
 ## ローカルでのフック
 

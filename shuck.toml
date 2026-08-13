@@ -1,0 +1,11 @@
+# shuckはユーザーグローバル設定とプロジェクト設定をマージしないため、CIとローカルで同じ結果に
+# するにはリポジトリ側にも同じ内容を置く必要がある。
+
+[lint]
+select = ["google"]
+
+[format]
+indent-style = "space"
+indent-width = 2
+binary-next-line = true
+switch-case-indent = true
