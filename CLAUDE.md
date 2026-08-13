@@ -28,11 +28,13 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ## gh skill CLIの構文(要注意)
 
-ドキュメントやIssue上の想定と、実際の `gh skill`(2.95系で確認)は以下が異なる。想定で書かない。
+ドキュメントやIssue上の想定と、実際の `gh skill`(2.97.0で確認)は以下が異なる。想定で書かない。
 
 - `--scope` の値は `project` または `user`(`repository` ではない)
 - バージョン指定は `skill-path@version` の形(例: `skills/foo@v1.0.0`)。`owner/repo@version` ではない
 - `gh skill preview` に `--ref` フラグは存在しない。同様に `skill@branch` 形式で指定する
+- `gh skill update` に `--agent`/`--scope` は無い。project/user両スコープを自動走査する
+- バージョン未指定時の解決順は「最新のタグ付きリリース → デフォルトブランチのHEAD」
 
 ## PRのマージ方針
 
@@ -41,18 +43,16 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ## CI
 
-ローカル検証には `gh`(2.90+)・`yq`・`rumdl`・`shellcheck`・`shfmt` が必要。
-
-`.github/workflows/validate-skills.yml` は `skills/**` の変更のみを対象に、SKILL.mdのfrontmatter
-(`name`のディレクトリ名一致・`description`必須)を検証する。`.claude/skills/` は対象外(意図的)。
-
-`.github/workflows/lint.yml` は全PRを対象に、Markdown(`rumdl`)・shellscriptの静的検査
-(`shellcheck`)・shellscriptのフォーマット(`shfmt`, Google Shell Style Guide準拠)を検証する。
+ワークフローは `.github/workflows/lint.yml` の1本のみ。全PRを対象に、`skills/*/SKILL.md` の
+frontmatter検証(`scripts/validate-skill-frontmatter.sh`)・Markdown(`rumdl`)・shellscriptの
+静的検査(`shellcheck`)・フォーマット(`shfmt`, Google Shell Style Guide準拠)を実行する。
+frontmatter検証の対象は `skills/` 配下のみ(`.claude/skills/` は意図的に対象外)。
 `.rumdl.toml` でMD013(行長制限)は無効化している(日本語の文章は1行1段落で書く方針のため)。
 
-ローカルで同じ検証をする場合:
+ローカルで同じ検証をする場合(`yq`・`rumdl`・`shellcheck`・`shfmt` が必要):
 
 ```bash
+scripts/validate-skill-frontmatter.sh
 rumdl check .
 shellcheck scripts/*.sh .claude/skills/*/scripts/*.sh
 shfmt -i 2 -ci -bn -d scripts/*.sh .claude/skills/*/scripts/*.sh
@@ -62,9 +62,6 @@ shfmt -i 2 -ci -bn -d scripts/*.sh .claude/skills/*/scripts/*.sh
 
 ## ローカルでのフック
 
-`skills/*/SKILL.md` を編集すると、`scripts/validate-skill-frontmatter.sh` がPostToolUseフック
-(`.claude/settings.json`)経由で自動実行され、frontmatterの不整合をその場で検知する。
-
-このスクリプトと`.github/workflows/validate-skills.yml`内のロジックは共有されておらず、
-別々に実装されている。検証ルール(name一致・description必須など)を変更する際は両方を
-同期させること。
+`.claude/settings.json` のPostToolUseフック(Write|Edit)で
+`scripts/validate-skill-frontmatter.sh` が走り、frontmatterの不整合をその場で検知する。
+CIと同じスクリプトなので、検証ルールを変えるときの同期先はこの1ファイルだけ。
