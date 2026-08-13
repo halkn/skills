@@ -19,7 +19,7 @@ description: >
 新規作成とレビューの両方を支援する。Docs as Code運用(Git管理・PRレビュー・
 オーナー明記)がすでに前提としてあることを想定し、ここでは文書の構成・文体のみを
 扱う。ブランチ作成・commit・PR作成といったGit操作そのものはこのskillの範囲外であり、
-[github-flow](../github-flow/SKILL.md) など既存の運用に委ねる(車輪の再発明をしない)。
+[git-flow](../git-flow/SKILL.md) など既存の運用に委ねる(車輪の再発明をしない)。
 
 ## 対象文書と使い分け
 
