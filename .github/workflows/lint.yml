@@ -32,21 +32,24 @@ jobs:
         with:
           report-type: annotations
 
-  shellcheck:
+  shuck:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: ludeeus/action-shellcheck@2.0.0
+      - name: Lint shell scripts
+        uses: ewhauser/shuck-action@v1
+        with:
+          shuck-version: 0.1.1
+      - name: Check shell script formatting
+        uses: ewhauser/shuck-action@v1
+        with:
+          shuck-version: 0.1.1
+          mode: format
+          format-mode: diff
 
-  shfmt:
+  ryl:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Install shfmt
-        run: |
-          sudo curl -sSL -o /usr/local/bin/shfmt \
-            https://github.com/mvdan/sh/releases/download/v3.13.1/shfmt_v3.13.1_linux_amd64
-          sudo chmod +x /usr/local/bin/shfmt
-          shfmt --version
-      - name: Check shell script formatting (Google style)
-        run: shfmt -i 2 -ci -bn -d .
+      - name: Lint YAML
+        run: pipx run "ryl==0.21.0" check --format github .

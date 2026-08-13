@@ -45,20 +45,22 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ワークフローは `.github/workflows/lint.yml` の1本のみ。全PRを対象に、`skills/*/SKILL.md` の
 frontmatter検証(`scripts/validate-skill-frontmatter.sh`)・Markdown(`rumdl`)・shellscriptの
-静的検査(`shellcheck`)・フォーマット(`shfmt`, Google Shell Style Guide準拠)を実行する。
+静的検査とフォーマット(`shuck`)・YAML(`ryl`)を実行する。
 frontmatter検証の対象は `skills/` 配下のみ(`.claude/skills/` は意図的に対象外)。
 `.rumdl.toml` でMD013(行長制限)は無効化している(日本語の文章は1行1段落で書く方針のため)。
 
-ローカルで同じ検証をする場合(`yq`・`rumdl`・`shellcheck`・`shfmt` が必要):
+ローカルで同じ検証をする場合(`yq`・`rumdl`・`shuck`・`ryl` が必要):
 
 ```bash
 scripts/validate-skill-frontmatter.sh
 rumdl check .
-shellcheck scripts/*.sh .claude/skills/*/scripts/*.sh
-shfmt -i 2 -ci -bn -d scripts/*.sh .claude/skills/*/scripts/*.sh
+shuck check .
+shuck format --check .
+ryl check .
 ```
 
-新しいshellscriptを書いたら `shfmt -i 2 -ci -bn -w <file>` で整形してからコミットする。
+新しいshellscriptを書いたら `shuck format <file>` で整形してからコミットする。設定ファイル
+(`shuck.toml`/`.ryl.toml`)は置かず、両ツールの既定ルールに従う。
 
 ## ローカルでのフック
 
