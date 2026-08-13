@@ -32,7 +32,7 @@ gh skill update --agent claude-code --scope user
 
 | 名前 | 説明 |
 |------|------|
-| [github-flow](skills/github-flow/SKILL.md) | 「ブランチ切ってcommitして」「PR作って」のような一言からGitHub Flow(ブランチ作成→コミット→PR作成→マージ)を進める |
+| [git-flow](skills/git-flow/SKILL.md) | ブランチ作成→コミット→push→PR作成→マージのGit作業手順。リモートがGitHubかAzure Reposかを判定してCLIを使い分ける |
 
 ## 開発フロー
 

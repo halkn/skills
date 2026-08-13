@@ -1,0 +1,58 @@
+{
+  "skill_name": "git-flow",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-flow",
+      "prompt": "src/greet.py に say_goodnight という関数を追加して、'Good night, {name}!' を返すようにして。追加できたら branch 切って commit して、push して PR も作って。",
+      "expected_output": "リモートのホスティング先を判定したうえでブランチを切り、対象ファイルのみをステージして小文字conventional prefixのコミットメッセージでcommitし、pushしてホスティング先のCLIでPRを作成する。",
+      "files": [],
+      "expectations": [
+        "実装より前に git remote でホスティング先を判定している",
+        "main/master 上で作業せず、git switch -c でブランチを切っている",
+        "対象ファイルのみをステージしている(git add -A / git add . を使わない)",
+        "コミットメッセージが小文字の conventional prefix で始まる",
+        "PR テンプレートの有無を確認している",
+        "テンプレートが無い場合、PR 本文に変更理由・影響範囲・確認手順が含まれる"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "ambiguous-commit",
+      "prompt": "config.json の timeout と README のタイポ、直したのを commit しておいて。",
+      "expected_output": "config.json(timeout変更)とREADME.md(タイポ修正)という無関係な2つの変更を1コミット1目的の原則に従って別々にcommitする(もしくは1つにまとめる前にユーザーに確認する)。git add -A のような無差別addは行わない。",
+      "files": [],
+      "expectations": [
+        "無関係な2つの変更を1コミット1目的の原則に従って分けている",
+        "git add -A / git add . を使わず対象ファイルのみをステージしている",
+        "依頼にない push や PR 作成を勝手に行っていない"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "merge-only",
+      "prompt": "マージして。",
+      "expected_output": "既存のPRに対してCI・ブランチポリシーの状態を確認してから、履歴を保持する通常のマージを実行する(リポジトリに別方針の指定がある場合はそれに従う)。",
+      "files": [],
+      "expectations": [
+        "マージ前に CI / ブランチポリシーの状態を確認している",
+        "リポジトリ側のマージ方針を確認し、指定が無ければ通常の merge を使っている",
+        "マージ方式を CLI のフラグで明示している(対話プロンプトに頼らない)",
+        "現在のブランチに対応する正しいPRを特定してマージしている",
+        "指示されていないソースブランチ削除を行っていない"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "azure-repos-commit",
+      "prompt": "この修正をコミットして。work item は 4821 ね。",
+      "expected_output": "リモートが Azure Repos であることを判定し、work item ID を #4821 の形式でコミットメッセージに含める。AB#4821 記法は使わない。",
+      "files": [],
+      "expectations": [
+        "git remote でホスティング先が Azure Repos だと判定している",
+        "コミットメッセージに #4821 を含めている(AB# 記法を使っていない)",
+        "依頼にない push や PR 作成を勝手に行っていない"
+      ]
+    }
+  ]
+}

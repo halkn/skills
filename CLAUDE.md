@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 CONTRIBUTING.mdに分離しない方針(単一skillへの集約が意図的な設計)。
 
 skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` に配置する(例:
-`skills/github-flow/evals/evals.json`)。実行・評価は`empirical-prompt-tuning`スキルに委ねる。
+`skills/git-flow/evals/evals.json`)。実行・評価は`empirical-prompt-tuning`スキルに委ねる。
 
 ## gh skill CLIの構文(要注意)
 
@@ -36,7 +36,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ## PRのマージ方針
 
-`main` へのマージは squash merge(`gh pr merge --squash`)。`skills/github-flow` スキルの既定
+`main` へのマージは squash merge(`gh pr merge --squash`)。`skills/git-flow` スキルの既定
 (通常merge)をこのリポジトリでは上書きする。
 
 ## CI
