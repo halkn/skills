@@ -1,6 +1,6 @@
 # GitHub（`gh`）
 
-`origin` が `github.com` の場合に読む。共通のフロー・コミット規約は `SKILL.md` を参照。
+`gh` 固有の手順。共通のフロー・コミット規約は `SKILL.md` を参照。
 
 ## PR テンプレート
 
@@ -50,6 +50,6 @@ gh pr merge <番号> --merge
 - レビューは `gh pr view <番号> --comments`
 - issue 作成は `gh issue create`
 
-## 環境固有の注意
+## 確認プロンプトが出た場合
 
-`gh pr create` は `claude/hooks/scope-gh-pr-create.sh` により、対象リポジトリの owner が `halkn`（個人アカウント）以外だと確認プロンプトが出る。仕事用リポジトリでは確認を求められるのが正常な動作なので、回避を試みずユーザーの判断を待つ。
+環境によっては `gh pr create` や `gh pr merge` に hook や permission 設定が掛かっており、対象リポジトリによって確認プロンプトが出る。これは想定された動作なので、フラグを変える・別コマンドで代替するといった回避を試みず、ユーザーの判断を待つ。
