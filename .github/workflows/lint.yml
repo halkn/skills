@@ -11,6 +11,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  skills:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install yq
+        run: |
+          sudo curl -sSL -o /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+      - name: Validate SKILL.md frontmatter
+        run: scripts/validate-skill-frontmatter.sh
+
   rumdl:
     runs-on: ubuntu-latest
     steps:
