@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review report</title>
+<style>
+:root {
+  --bg: #ffffff; --fg: #1c1c1e; --muted: #6b7280; --line: #e4e4e7;
+  --panel: #fafafa; --accent: #2563eb; --sel: #e8f0fe;
+  --add-bg: #e6ffec; --add-fg: #0a5c28; --del-bg: #ffebe9; --del-fg: #82071e;
+  --hit: #fff8c5; --high: #991b1b; --medium: #b45309; --low: #4b5563;
+  --block: #b91c1c; --ok: #15803d; --human: #6d28d9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181d; --fg: #e6e6e6; --muted: #9ca3af; --line: #2c2f36;
+    --panel: #1c1f26; --accent: #7aa2f7; --sel: #23304a;
+    --add-bg: #12261c; --add-fg: #7ee2a8; --del-bg: #2d1618; --del-fg: #ff9492;
+    --hit: #3a3413; --high: #f87171; --medium: #fbbf24; --low: #9ca3af;
+    --block: #f87171; --ok: #4ade80; --human: #c4b5fd;
+  }
+}
+* { box-sizing: border-box; }
+/* タブの切替は hidden 属性で行う。author origin の display 指定（main の grid など）は
+   UA スタイルの [hidden] より強いので、!important で押さえないと隠れない */
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+}
+code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+button { font: inherit; color: inherit; }
+
+header {
+  padding: 12px 20px 0; border-bottom: 1px solid var(--line); background: var(--panel);
+}
+header h1 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+header .sub { font-size: 12px; color: var(--muted); }
+header a { color: var(--accent); }
+.tabs { display: flex; gap: 4px; margin-top: 10px; }
+.tab {
+  border: 1px solid transparent; border-bottom: 0; background: none; cursor: pointer;
+  padding: 6px 14px; border-radius: 6px 6px 0 0; color: var(--muted);
+}
+.tab[aria-selected="true"] {
+  background: var(--bg); border-color: var(--line); color: var(--fg);
+  margin-bottom: -1px; padding-bottom: 7px;
+}
+
+#summary { padding: 24px; max-width: 900px; }
+.verdict {
+  border: 1px solid var(--line); border-left: 4px solid var(--block);
+  border-radius: 6px; padding: 16px 20px; background: var(--panel);
+}
+.verdict.pass { border-left-color: var(--ok); }
+.verdict h2 { margin: 0; font-size: 18px; color: var(--block); }
+.verdict.pass h2 { color: var(--ok); }
+.verdict .why { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.verdict .note { margin: 12px 0 0; }
+
+table.matrix { border-collapse: collapse; margin-top: 24px; min-width: 420px; }
+table.matrix th, table.matrix td { border: 1px solid var(--line); padding: 6px 14px; text-align: right; }
+table.matrix th { background: var(--panel); font-weight: 600; }
+table.matrix th:first-child, table.matrix td:first-child { text-align: left; }
+table.matrix tr.total td, table.matrix tr.total th { font-weight: 600; }
+table.matrix td.zero { color: var(--muted); }
+
+#summary h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 8px; }
+ul.picks { margin: 0; padding-left: 20px; }
+ul.picks li { margin-bottom: 6px; }
+ul.picks a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+.hint { color: var(--muted); font-size: 13px; }
+.actions { margin-top: 24px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.actions button {
+  border: 1px solid var(--line); background: var(--bg); border-radius: 6px;
+  padding: 6px 14px; cursor: pointer;
+}
+.actions button:hover { background: var(--panel); }
+.actions .said { color: var(--ok); font-size: 13px; }
+
+main { display: grid; grid-template-columns: minmax(300px, 32%) 1fr; height: calc(100vh - 96px); }
+@media (max-width: 720px) { main { grid-template-columns: 1fr; height: auto; } }
+
+#list { overflow-y: auto; border-right: 1px solid var(--line); }
+#list h2 {
+  position: sticky; top: 0; margin: 0; padding: 8px 16px; background: var(--panel);
+  border-bottom: 1px solid var(--line); font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--muted);
+}
+.item {
+  display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line);
+  background: none; padding: 10px 16px; cursor: pointer;
+}
+.item:hover { background: var(--panel); }
+.item[aria-current="true"] { background: var(--sel); }
+.item .loc { font-size: 12px; color: var(--muted); word-break: break-all; }
+.item .txt { margin-top: 2px; }
+.item.done .txt { text-decoration: line-through; color: var(--muted); }
+.badge {
+  display: inline-block; padding: 0 6px; border-radius: 10px; font-size: 11px;
+  border: 1px solid currentColor; margin-right: 6px; vertical-align: 1px;
+}
+.s-HIGH { color: var(--high); }
+.s-MEDIUM { color: var(--medium); }
+.s-LOW { color: var(--low); }
+.c-human { color: var(--human); }
+
+#detail { overflow-y: auto; padding: 20px 24px; }
+#detail h2 { font-size: 16px; margin: 0 0 4px; }
+#detail .loc { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+#detail dt { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 14px; }
+#detail dd { margin: 4px 0 0; }
+.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+
+.triage { margin-top: 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.triage legend { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px; }
+.triage label { margin-right: 16px; cursor: pointer; }
+.triage .why { margin-top: 8px; color: var(--muted); font-size: 13px; }
+
+.hunk { margin-top: 18px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.hunk .section { padding: 6px 12px; background: var(--panel); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+table.diff { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.diff td { padding: 0 8px; white-space: pre-wrap; word-break: break-all; vertical-align: top; }
+table.diff td.n { width: 1%; text-align: right; color: var(--muted); user-select: none; white-space: nowrap; }
+tr.add td { background: var(--add-bg); color: var(--add-fg); }
+tr.del td { background: var(--del-bg); color: var(--del-fg); }
+tr.hit td { background: var(--hit); }
+tr.hit td.n { font-weight: 700; }
+
+#export { width: 100%; height: 260px; margin-top: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <div class="sub"><span id="sub"></span> <a id="target-link" hidden></a></div>
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tab-summary" role="tab" type="button">サマリー</button>
+    <button class="tab" id="tab-findings" role="tab" type="button">指摘</button>
+  </div>
+</header>
+
+<section id="summary" role="tabpanel"></section>
+
+<main id="findings-view" role="tabpanel" hidden>
+  <nav id="list" aria-label="findings"></nav>
+  <section id="detail"></section>
+</main>
+
+<script>window.__REVIEW_DATA__ = /*__DATA__*/null;</script>
+<script>
+(function () {
+  var data = window.__REVIEW_DATA__ || { target: {}, findings: [], stats: {} };
+  var findings = data.findings || [];
+  var SEVERITIES = data.severities || ['HIGH', 'MEDIUM', 'LOW'];
+  var DISPOSITIONS = data.dispositions || ['fix-now', 'issue', 'wont-fix'];
+  var LABELS = { 'fix-now': '今回直す', 'issue': 'Issue に切る', 'wont-fix': '対応しない' };
+  var STORE = 'review-report:' + (data.report_id || 'default');
+
+  var el = function (tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = String(text);
+    return n;
+  };
+
+  // 仕分けの上書きはブラウザに残す。JSON 側の値は初期値として扱う
+  var overrides = {};
+  try { overrides = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { overrides = {}; }
+  var save = function () {
+    try { localStorage.setItem(STORE, JSON.stringify(overrides)); } catch (e) { /* 保存できなくても表示は続ける */ }
+  };
+  var dispositionOf = function (f) {
+    return Object.prototype.hasOwnProperty.call(overrides, f.id) ? overrides[f.id] : f.disposition;
+  };
+
+  document.getElementById('title').textContent = (data.target && data.target.label) || 'Review report';
+  document.title = document.getElementById('title').textContent;
+  var s = data.stats || {};
+  document.getElementById('sub').textContent =
+    '指摘 ' + (s.total || 0) + ' 件' +
+    (s.unmatched ? '（うち diff 外 ' + s.unmatched + ' 件）' : '') +
+    (data.level ? ' / effort ' + data.level : '');
+  // URL は findings.json 由来なので、リンクにする前にスキームを絞る
+  var url = (data.target && data.target.url) || '';
+  if (/^https?:\/\//i.test(url)) {
+    var link = document.getElementById('target-link');
+    link.href = url;
+    link.textContent = url;
+    link.hidden = false;
+  }
+
+  // --- タブ ---
+  var panels = {
+    summary: [document.getElementById('tab-summary'), document.getElementById('summary')],
+    findings: [document.getElementById('tab-findings'), document.getElementById('findings-view')]
+  };
+  function show(which) {
+    Object.keys(panels).forEach(function (k) {
+      var on = k === which;
+      panels[k][0].setAttribute('aria-selected', String(on));
+      panels[k][1].hidden = !on;
+    });
+    if (which === 'summary') renderSummary();
+  }
+  Object.keys(panels).forEach(function (k) {
+    panels[k][0].addEventListener('click', function () { show(k); });
+  });
+
+  // --- サマリー ---
+  var summary = document.getElementById('summary');
+
+  function renderSummary() {
+    summary.textContent = '';
+    var blocking = findings.filter(function (f) { return dispositionOf(f) === 'fix-now'; });
+
+    var box = el('div', 'verdict' + (blocking.length ? '' : ' pass'));
+    box.appendChild(el('h2', null, blocking.length ? 'このままはマージしない' : 'マージしてよい'));
+    box.appendChild(el('p', 'why', blocking.length
+      ? '「今回直す」に仕分けた指摘が ' + blocking.length + ' 件残っている'
+      : '「今回直す」に仕分けた指摘は無い（残りは Issue か見送り）'));
+    if (data.assessment && data.assessment.note) {
+      box.appendChild(el('p', 'note', data.assessment.note));
+    }
+    summary.appendChild(box);
+
+    summary.appendChild(buildMatrix());
+
+    if (blocking.length) {
+      summary.appendChild(el('h3', null, 'マージ前に直す指摘'));
+      summary.appendChild(buildPicks(blocking));
+    }
+    var issues = findings.filter(function (f) { return dispositionOf(f) === 'issue'; });
+    if (issues.length) {
+      summary.appendChild(el('h3', null, 'Issue に切り出す指摘'));
+      summary.appendChild(buildPicks(issues));
+    }
+
+    var actions = el('div', 'actions');
+    var btn = el('button', null, 'Issue 本文を組み立てる');
+    btn.type = 'button';
+    btn.addEventListener('click', function () { buildExport(issues); });
+    actions.appendChild(btn);
+
+    var edited = Object.keys(overrides).length;
+    if (edited) {
+      var reset = el('button', null, '仕分けを初期値に戻す (' + edited + ' 件変更中)');
+      reset.type = 'button';
+      reset.addEventListener('click', function () {
+        overrides = {};
+        save();
+        findings.forEach(paint);
+        renderSummary();
+      });
+      actions.appendChild(reset);
+    }
+    actions.appendChild(el('span', 'hint', '仕分けは「指摘」タブで変えられる。変更はこのブラウザに残る'));
+    summary.appendChild(actions);
+  }
+
+  function buildMatrix() {
+    var counts = {};
+    SEVERITIES.forEach(function (sv) {
+      counts[sv] = {};
+      DISPOSITIONS.forEach(function (d) { counts[sv][d] = 0; });
+    });
+    findings.forEach(function (f) {
+      var sv = counts[f.severity] ? f.severity : SEVERITIES[SEVERITIES.length - 1];
+      counts[sv][dispositionOf(f)] += 1;
+    });
+
+    var table = el('table', 'matrix');
+    var head = el('tr');
+    head.appendChild(el('th', null, 'severity'));
+    DISPOSITIONS.forEach(function (d) { head.appendChild(el('th', null, LABELS[d])); });
+    head.appendChild(el('th', null, '計'));
+    table.appendChild(head);
+
+    var totals = {};
+    DISPOSITIONS.forEach(function (d) { totals[d] = 0; });
+    SEVERITIES.forEach(function (sv) {
+      var row = el('tr');
+      var sum = 0;
+      row.appendChild(el('th', 's-' + sv, sv));
+      DISPOSITIONS.forEach(function (d) {
+        var n = counts[sv][d];
+        sum += n; totals[d] += n;
+        row.appendChild(el('td', n ? '' : 'zero', n));
+      });
+      row.appendChild(el('td', sum ? '' : 'zero', sum));
+      table.appendChild(row);
+    });
+
+    var last = el('tr', 'total');
+    last.appendChild(el('th', null, '計'));
+    var all = 0;
+    DISPOSITIONS.forEach(function (d) { all += totals[d]; last.appendChild(el('td', null, totals[d])); });
+    last.appendChild(el('td', null, all));
+    table.appendChild(last);
+    return table;
+  }
+
+  function buildPicks(items) {
+    var ul = el('ul', 'picks');
+    items.forEach(function (f) {
+      var li = el('li');
+      li.appendChild(el('span', 'badge s-' + f.severity, f.severity));
+      var a = el('a', null, f.file + (f.line ? ':' + f.line : ''));
+      a.addEventListener('click', function () { show('findings'); select(f.id); });
+      li.appendChild(a);
+      li.appendChild(document.createTextNode(' — ' + (f.short_summary || '')));
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  function buildExport(items) {
+    var old = document.getElementById('export');
+    if (old) old.parentNode.removeChild(old);
+    var text = items.map(function (f) {
+      return [
+        '## ' + (f.short_summary || ''),
+        '',
+        '- 位置: `' + f.file + (f.line ? ':' + f.line : '') + '`',
+        '- severity: ' + f.severity + (f.category ? ' / ' + f.category : ''),
+        '',
+        f.summary || '',
+        '',
+        f.failure_scenario ? '**再現条件**: ' + f.failure_scenario : '',
+        f.disposition_reason ? '**今回見送る理由**: ' + f.disposition_reason : ''
+      ].filter(Boolean).join('\n');
+    }).join('\n\n---\n\n');
+
+    var box = el('textarea');
+    box.id = 'export';
+    box.value = text || 'Issue に切る指摘はありません';
+    box.readOnly = true;
+    summary.appendChild(box);
+    box.focus();
+    box.select();
+  }
+
+  // --- 指摘一覧 ---
+  var list = document.getElementById('list');
+  var detail = document.getElementById('detail');
+  var buttons = {};
+
+  var rank = {};
+  SEVERITIES.forEach(function (sv, i) { rank[sv] = i; });
+  var ordered = findings.slice().sort(function (a, b) {
+    return (rank[a.severity] - rank[b.severity]) || (a.id - b.id);
+  });
+
+  SEVERITIES.forEach(function (sv) {
+    var members = ordered.filter(function (f) { return f.severity === sv; });
+    if (!members.length) return;
+    list.appendChild(el('h2', null, sv + ' (' + members.length + ')'));
+    members.forEach(function (f) {
+      var b = el('button', 'item');
+      b.type = 'button';
+      var loc = el('div', 'loc');
+      loc.appendChild(el('span', 'badge s-' + sv, f.category || sv));
+      loc.appendChild(document.createTextNode(f.file + (f.line ? ':' + f.line : '')));
+      b.appendChild(loc);
+      b.appendChild(el('div', 'txt', f.short_summary || f.summary || ''));
+      b.addEventListener('click', function () { select(f.id); });
+      list.appendChild(b);
+      buttons[f.id] = b;
+      paint(f);
+    });
+  });
+
+  function paint(f) {
+    var b = buttons[f.id];
+    if (!b) return;
+    var done = dispositionOf(f) !== 'fix-now';
+    b.className = 'item' + (done ? ' done' : '');
+  }
+
+  function select(id) {
+    var f = findings.filter(function (x) { return x.id === id; })[0];
+    Object.keys(buttons).forEach(function (k) {
+      buttons[k].setAttribute('aria-current', String(Number(k) === id));
+    });
+    detail.textContent = '';
+    if (!f) return;
+
+    detail.appendChild(el('h2', null, f.short_summary || f.summary || ''));
+    var loc = el('div', 'loc', f.file + (f.line ? ':' + f.line : ''));
+    if (f.author) loc.textContent += '  —  @' + f.author;
+    if (f.verdict) loc.textContent += '  —  ' + f.verdict;
+    detail.appendChild(loc);
+
+    var dl = el('dl');
+    [['summary', f.summary], ['failure scenario', f.failure_scenario], ['outcome', f.outcome]]
+      .forEach(function (pair) {
+        if (!pair[1]) return;
+        dl.appendChild(el('dt', null, pair[0]));
+        dl.appendChild(el('dd', null, pair[1]));
+      });
+    detail.appendChild(dl);
+    detail.appendChild(buildTriage(f));
+
+    if (f.hunk) {
+      detail.appendChild(renderHunk(f.hunk, f.line));
+    } else {
+      detail.appendChild(el('p', 'empty', 'この指摘の行は diff に含まれていません'));
+    }
+  }
+
+  function buildTriage(f) {
+    var box = el('fieldset', 'triage');
+    box.appendChild(el('legend', null, '仕分け'));
+    DISPOSITIONS.forEach(function (d) {
+      var label = el('label');
+      var radio = el('input');
+      radio.type = 'radio';
+      radio.name = 'disposition';
+      radio.checked = dispositionOf(f) === d;
+      radio.addEventListener('change', function () {
+        overrides[f.id] = d;
+        save();
+        paint(f);
+      });
+      label.appendChild(radio);
+      label.appendChild(document.createTextNode(' ' + LABELS[d]));
+      box.appendChild(label);
+    });
+    if (f.disposition_reason) box.appendChild(el('div', 'why', f.disposition_reason));
+    return box;
+  }
+
+  function renderHunk(hunk, line) {
+    var wrap = el('div', 'hunk');
+    wrap.appendChild(el('div', 'section', hunk.file + (hunk.section ? '  ' + hunk.section : '')));
+    var table = el('table', 'diff');
+    var body = el('tbody');
+    (hunk.lines || []).forEach(function (ln) {
+      var tr = el('tr', ln.kind === 'add' ? 'add' : ln.kind === 'del' ? 'del' : '');
+      if (ln.new === line) tr.className += ' hit';
+      tr.appendChild(el('td', 'n mono', ln.old === null ? '' : ln.old));
+      tr.appendChild(el('td', 'n mono', ln.new === null ? '' : ln.new));
+      tr.appendChild(el('td', 'mono', (ln.kind === 'add' ? '+' : ln.kind === 'del' ? '-' : ' ') + ln.text));
+      body.appendChild(tr);
+    });
+    table.appendChild(body);
+    wrap.appendChild(table);
+    return wrap;
+  }
+
+  if (ordered.length) select(ordered[0].id);
+  else detail.appendChild(el('p', 'empty', '指摘はありません'));
+  show('summary');
+})();
+</script>
+</body>
+</html>
