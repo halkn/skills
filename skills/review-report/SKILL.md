@@ -21,6 +21,7 @@ argument-hint: "[pr-number | pr-url]"
 
 - `python3`（標準ライブラリのみ使う。追加インストールは不要）
 - PR モードのみ `gh`。GitHub 以外のホスティングでは PR モードに入らない
+- Bash をサンドボックスで動かしている場合、出力先（後述の `work_root`）が書込・読取とも許可されていること。許可が無いと手順 1 の `mkdir` で止まる
 
 ## 手順
 
@@ -35,10 +36,10 @@ PR モードに入る前に `git remote -v` でホストを確認する。`githu
 ```bash
 root=$(git rev-parse --show-toplevel)
 slug=$(printf '%s' "${root#/}" | tr -c 'A-Za-z0-9._-' '-')
-base="${XDG_STATE_HOME:-$HOME/.local/state}/review-report/$slug"
-work="$base/$(date +%Y%m%d-%H%M%S)"
+work_root="${XDG_STATE_HOME:-$HOME/.local/state}/review-report/$slug"
+work="$work_root/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$work"
-ls -1d "$base"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r old; do
+ls -1d "$work_root"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r old; do
   rm -rf "$old"
 done
 ```
@@ -47,7 +48,9 @@ done
 
 リポジトリの識別にはトップレベルの絶対パス全体を使う。basename だけだと別 owner の同名リポジトリや同じリポジトリの複数 worktree が 1 つのディレクトリに混ざり、どの作業木のレポートか区別できない。
 
-`diff.patch` にはレビュー対象のソースがそのまま入るので、同一リポジトリの過去分は最新 10 件だけ残して消す。手で消してよい。
+`diff.patch` にはレビュー対象のソースがそのまま入るので、同一リポジトリのディレクトリは今回の分を含めて新しい 10 件だけ残し、それより古いものは消す。手で消してもよい。
+
+変数名を `base` にしない。次のステップが diff の基準 ref を `base` に入れるため、衝突すると基準 ref 無しのときの報告がパス文字列になる。
 
 ### 2. diff を取る
 
