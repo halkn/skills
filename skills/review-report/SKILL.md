@@ -33,11 +33,21 @@ PR モードに入る前に `git remote -v` でホストを確認する。`githu
 作業ディレクトリを決めて、以降の中間ファイルをそこに置く。
 
 ```bash
-work="$HOME/.claude/review-reports/$(basename "$(git rev-parse --show-toplevel)")/$(date +%Y%m%d-%H%M%S)"
+root=$(git rev-parse --show-toplevel)
+slug=$(printf '%s' "${root#/}" | tr -c 'A-Za-z0-9._-' '-')
+base="${XDG_STATE_HOME:-$HOME/.local/state}/review-report/$slug"
+work="$base/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$work"
+ls -1d "$base"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r old; do
+  rm -rf "$old"
+done
 ```
 
 対象リポジトリの中には何も書かない。`.gitignore` の変更も不要。
+
+リポジトリの識別にはトップレベルの絶対パス全体を使う。basename だけだと別 owner の同名リポジトリや同じリポジトリの複数 worktree が 1 つのディレクトリに混ざり、どの作業木のレポートか区別できない。
+
+`diff.patch` にはレビュー対象のソースがそのまま入るので、同一リポジトリの過去分は最新 10 件だけ残して消す。手で消してよい。
 
 ### 2. diff を取る
 
