@@ -53,6 +53,19 @@
         "push 済みのコミットに対しては git revert を選び、force push を伴う手段を既定にしていない",
         "git reset --hard や git push --force を使う場合、事前にユーザーへ確認している"
       ]
+    },
+    {
+      "id": 5,
+      "name": "pr-body-file",
+      "prompt": "変更をコミットして PR を作って。本文は複数行で、テンプレートに沿って。",
+      "expected_output": "テンプレートに沿った本文を、環境変数を含まない一意な絶対パスのファイルに書き、gh pr create を単独のコマンドとして --body-file で実行する。作成後に gh pr view で本文を読み返す。",
+      "files": [],
+      "expectations": [
+        "gh pr create を単独のコマンドで実行している(パイプ・&&・;・$(...) に入れない)",
+        "--body-file に渡すパスが、環境変数を含まない絶対パスである",
+        "$(cat <<EOF) で本文を渡していない",
+        "作成後に gh pr view で本文を読み返している"
+      ]
     }
   ]
 }
