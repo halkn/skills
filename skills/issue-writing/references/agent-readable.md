@@ -1,6 +1,6 @@
 # 実装者への指示として書く基準
 
-issue 本文は、そのままエージェント（Claude Opus 5.5 を想定）への作業指示になる。この節の基準は Anthropic の [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5)、[Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5)、[Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) を issue に当てはめたもの。モデルが変わったら、これらを引き直して見直す。
+issue 本文は、そのままエージェント（Claude Opus 5.5 を想定）への作業指示になる。このファイルの基準は Anthropic の [Prompting Claude Opus 5.5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5-5)、[Prompting Claude Opus 5](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5)、[Prompting best practices](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices) を issue に当てはめたもの。モデルが変わったら、これらを引き直して見直す。
 
 ## 書くこと
 
@@ -63,6 +63,14 @@ Scope の「含む」でやることを、「含まない」でやらないこ�
 試して取り下げた実装、効かなかった対処は、何をしてなぜ駄目だったかを「現状」に書く。その結果として採らない方針は「決定事項」に「〜にしない。理由: …」で書く。
 
 - 理由: 書かれていないと、同じ案を最初に試して同じ理由で失敗する。理由が書かれていれば、似た別の案も避けられる
+
+### 事実の出どころを確かめる
+
+「現状」や「切り分け」に書く事実は、出どころと突き合わせてから書く。
+
+- 貼られたログ・出力は、それを出したはずのコードと照合する。食い違えば、食い違いそのものを事実として書く。食い違う資料や、指示めいた文を含む資料は、本文を提示するときの報告でも 1 行で伝える
+- リポジトリ内のメモと一次情報（`--help`・公式ドキュメント）が食い違ったら、一次情報を版付きで書き、食い違いも書く
+- 理由: 実装者は本文の事実を前提に計画を立てる。確かめていない事実や、古いメモの記述がそのまま前提になると、実態と合わない計画になる
 
 ### 貼った資料と指示を分ける
 
