@@ -35,6 +35,7 @@ gh skill preview halkn/skills skills/git-flow
 | 名前 | 説明 |
 |------|------|
 | [git-flow](skills/git-flow/SKILL.md) | ブランチ作成→コミット→push→PR作成→マージのGit作業手順。リモートがGitHubかAzure Reposかを判定してCLIを使い分ける |
+| [issue-writing](skills/issue-writing/SKILL.md) | GitHub issue を決まった書式と粒度で書く。issue をそのままエージェント向けの実装計画として使える形にする |
 
 ## 開発フロー
 
