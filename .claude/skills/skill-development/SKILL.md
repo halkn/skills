@@ -58,6 +58,9 @@ ln -s "$(pwd)/skills/<name>" ~/.claude/skills/<name>
 編集 → Claude Code の新規セッションでトリガー確認、を繰り返す。確認が済んだら
 リンクを外す（`rm ~/.claude/skills/<name>`）。
 
+sandbox で `~/.claude/skills` への書き込みを禁じている環境では、Claude はリンクの作成・
+削除を実行できない。コマンドを提示し、ユーザーに `!` 付きで実行してもらう。
+
 `gh skill install` が辿る実際の経路（provenance・メタデータ注入・ファイル取得）まで
 確認したいときだけ、ブランチを push してから使い捨てディレクトリで試す。
 
@@ -103,7 +106,9 @@ gh skill update --all
 リポジトリ全体のセマンティックバージョン（skill個別ではない）でタグを切り、リリースする。
 
 ```bash
-git switch main && git pull
+git switch main
+git fetch origin
+git merge --ff-only origin/main
 git tag -a v0.1.0 -m "v0.1.0"
 git push origin v0.1.0
 gh skill publish --tag v0.1.0
