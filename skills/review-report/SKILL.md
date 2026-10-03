@@ -126,7 +126,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/validate_review.py \
 
 「diff 外」と報告された指摘は、`line` を head 側の行番号として書けていないか、diff の取り方が対象とずれている。まずそこを疑う。件数が合っていれば、行が本当に diff の外（既存バグの指摘など）なので、そのままでよい。
 
-ブラウザで開くなら `--open` を足すか `open "$work/index.html"` を実行する。**ユーザーに頼まれない限り勝手に開かない。**
+ブラウザで開くなら `--open` を足すか `open "$work/index.html"` を実行する。**ユーザーに頼まれない限り勝手に開かない。** sandbox が `open` を禁じている環境（macOS で Launch Services が塞がれ `-10822` 等で失敗する）では、`$work` を展開した絶対パスで `open <path>` を提示し、ユーザーに `!` 付きで実行してもらう。
 
 ### 7. 報告する
 
