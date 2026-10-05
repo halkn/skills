@@ -58,11 +58,11 @@
       "id": 5,
       "name": "pr-body-file",
       "prompt": "変更をコミットして PR を作って。本文は複数行で、テンプレートに沿って。",
-      "expected_output": "テンプレートに沿った本文を、環境変数を含まない一意な絶対パスのファイルに書き、gh pr create を単独のコマンドとして --body-file で実行する。作成後に gh pr view で本文を読み返す。",
+      "expected_output": "テンプレートに沿った本文を、作業ディレクトリ内の gitignore された場所に書き、gh pr create を単独のコマンドとして --body-file にその相対パスを渡して実行する。作成後に gh pr view で本文を読み返す。",
       "files": [],
       "expectations": [
         "gh pr create を単独のコマンドで実行している(パイプ・&&・;・$(...) に入れない)",
-        "--body-file に渡すパスが、環境変数を含まない絶対パスである",
+        "--body-file に渡すパスが、作業ディレクトリ内の gitignore された場所を指す相対パスである",
         "$(cat <<EOF) で本文を渡していない",
         "作成後に gh pr view で本文を読み返している"
       ]
