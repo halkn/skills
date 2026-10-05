@@ -54,11 +54,19 @@ done
 
 ### 2. diff を取る
 
-PR モード:
+PR モード: base ブランチ名を調べ、base・PR head の順に fetch してから、ローカルで diff を書き出す。`gh` と `git fetch` は、それぞれ何も前置きせず 1 コマンドだけで実行する。
 
 ```bash
-gh pr diff <number> > "$work/diff.patch"
+gh pr view <number> --json baseRefName --jq .baseRefName
+git fetch origin <baseRefName>
+git fetch origin pull/<number>/head
 ```
+
+```bash
+git diff "origin/<baseRefName>...FETCH_HEAD" >"$work/diff.patch"
+```
+
+`gh pr diff > file` にしないのは、ファイルへのリダイレクトを含む呼び出しを丸ごと sandbox の中で動かす環境があり、そこでは `gh` の通信や認証情報の読取が失敗するため。`FETCH_HEAD` は直前の fetch で上書きされるので、PR head の fetch を最後にする。
 
 ローカルモード（コミット済みと未コミットの両方を含める）:
 
