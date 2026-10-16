@@ -21,7 +21,6 @@ argument-hint: "[pr-number | pr-url]"
 
 - `python3`（標準ライブラリのみ使う。追加インストールは不要）
 - PR モードのみ `gh`。GitHub 以外のホスティングでは PR モードに入らない
-- Bash をサンドボックスで動かしている場合、出力先（後述の `work_root`）が書込・読取とも許可されていること。許可が無いと手順 1 の `mkdir` で止まる
 
 ## 手順
 
@@ -35,8 +34,10 @@ PR モードに入る前に `git remote -v` でホストを確認する。`githu
 
 ```bash
 root=$(git rev-parse --show-toplevel)
-slug=$(printf '%s' "${root#/}" | tr -c 'A-Za-z0-9._-' '-')
-work_root="${XDG_STATE_HOME:-$HOME/.local/state}/review-report/$slug"
+work_root="$root/.scratch/review-report"
+if ! git check-ignore -q "$work_root/"; then
+  printf '%s\n' '/.scratch/' >>"$(git rev-parse --git-path info/exclude)"
+fi
 work="$work_root/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$work"
 ls -1d "$work_root"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r old; do
@@ -44,11 +45,11 @@ ls -1d "$work_root"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r 
 done
 ```
 
-対象リポジトリの中には何も書かない。`.gitignore` の変更も不要。
+出力先は作業木のルートの中に置く。作業ディレクトリの外は、sandbox や `blockReadsOutsideWorkingDirectories` で読み書きできない環境がある。`$TMPDIR` は Read / Edit tool から読めず、sandbox の内と外で展開先が変わる環境がある。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
 
-リポジトリの識別にはトップレベルの絶対パス全体を使う。basename だけだと別 owner の同名リポジトリや同じリポジトリの複数 worktree が 1 つのディレクトリに混ざり、どの作業木のレポートか区別できない。
+`.scratch/` が ignore されていなければ、`info/exclude` に足してから書く。ローカルだけの設定なので追跡されず、レポートが commit に混ざらない。
 
-`diff.patch` にはレビュー対象のソースがそのまま入るので、同一リポジトリのディレクトリは今回の分を含めて新しい 10 件だけ残し、それより古いものは消す。手で消してもよい。
+`.scratch/review-report/` はこの skill の置き場で、今回の分を含めて新しい 10 件だけ残し、それより古いものは消す（`diff.patch` にはレビュー対象のソースがそのまま入るため）。`.scratch/` の他のファイルには触れない。手で消してもよい。
 
 変数名を `base` にしない。次のステップが diff の基準 ref を `base` に入れるため、衝突すると基準 ref 無しのときの報告がパス文字列になる。
 
