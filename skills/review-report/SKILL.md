@@ -30,26 +30,40 @@ argument-hint: "[pr-number | pr-url]"
 
 PR モードに入る前に `git remote -v` でホストを確認する。`github.com` 以外なら PR モードは使えないので、ローカルモードに切り替えるかユーザーに確認する。
 
-作業ディレクトリを決めて、以降の中間ファイルをそこに置く。
+作業ディレクトリを決めて、以降の中間ファイルをそこに置く。セッションの環境の案内（system prompt の Environment）に scratchpad のパスがあれば、その絶対パスを `scratchpad=` に書き込んでから実行する。無ければ空のまま実行する。
 
 ```bash
-root=$(git rev-parse --show-toplevel)
-work_root="$root/.scratch/review-report"
-if ! git check-ignore -q "$work_root/"; then
-  printf '%s\n' '/.scratch/' >>"$(git rev-parse --git-path info/exclude)"
+scratchpad=''
+if [ -n "$scratchpad" ]; then
+  [ -d "$scratchpad" ] || {
+    echo "scratchpad が見つからない: $scratchpad" >&2
+    exit 1
+  }
+  work="$scratchpad/review-report/$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$work"
+else
+  root=$(git rev-parse --show-toplevel)
+  work_root="$root/.scratch/review-report"
+  if ! git check-ignore -q "$work_root/"; then
+    printf '%s\n' '/.scratch/' >>"$(git rev-parse --git-path info/exclude)"
+  fi
+  work="$work_root/$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "$work"
+  ls -1d "$work_root"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r old; do
+    rm -rf "$old"
+  done
 fi
-work="$work_root/$(date +%Y%m%d-%H%M%S)"
-mkdir -p "$work"
-ls -1d "$work_root"/*/ 2>/dev/null | sort -r | tail -n +11 | while IFS= read -r old; do
-  rm -rf "$old"
-done
+echo "work=$work"
 ```
 
-出力先は作業木のルートの中に置く。作業ディレクトリの外は、sandbox や `blockReadsOutsideWorkingDirectories` で読み書きできない環境がある。`$TMPDIR` は Read / Edit tool から読めず、sandbox の内と外で展開先が変わる環境がある。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
+置き場は scratchpad を優先する。scratchpad は Read / Edit tool・sandbox の中の Bash・sandbox の外のコマンドのどれからも同じ絶対パスで読み書きでき、利用者のリポジトリに置き場所も ignore の設定も求めない。セッションごとに分かれ、transcript と一緒に消えるので、古いレポートの掃除はしない。
 
-`.scratch/` が ignore されていなければ、`info/exclude` に足してから書く。ローカルだけの設定なので追跡されず、レポートが commit に混ざらない。
+scratchpad のパスは環境の案内から取り、`CLAUDE_CODE_TMPDIR` などの環境変数から組み立てない。組み立て方が環境で変わり、scratchpad の外を指すと Read tool から読めないレポートができる。書き込んだパスがディレクトリとして無ければ、フォールバックせずに止める（パスの写し間違いを隠さないため）。
 
-`.scratch/review-report/` はこの skill の置き場で、今回の分を含めて新しい 10 件だけ残し、それより古いものは消す（`diff.patch` にはレビュー対象のソースがそのまま入るため）。`.scratch/` の他のファイルには触れない。手で消してもよい。
+scratchpad が無いセッション（API キーや Bedrock などで使う環境、`enableArtifact: false` の環境）では、作業木のルートの中の `.scratch/review-report/` に置く。`$TMPDIR` や `/tmp` にはしない。`$TMPDIR` は Read / Edit tool から読めず、sandbox の内と外で展開先が変わる環境がある。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
+
+- `.scratch/` が ignore されていなければ、`info/exclude` に足してから書く。ローカルだけの設定なので追跡されず、レポートが commit に混ざらない
+- `.scratch/review-report/` はこの skill の置き場で、今回の分を含めて新しい 10 件だけ残し、それより古いものは消す（`diff.patch` にはレビュー対象のソースがそのまま入るため）。`.scratch/` の他のファイルには触れない。手で消してもよい
 
 変数名を `base` にしない。次のステップが diff の基準 ref を `base` に入れるため、衝突すると基準 ref 無しのときの報告がパス文字列になる。
 
@@ -139,7 +153,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/validate_review.py \
 
 ### 7. 報告する
 
-- HTML のパス
+- HTML の絶対パス（`$work` を展開したもの。scratchpad のパスは作業ディレクトリからの相対では辿れない）
 - マージ可否の結論と、`fix-now` に仕分けた指摘の件数
 - severity × 仕分けの内訳（1 行で足りる）
 - 「diff 外」の件数
