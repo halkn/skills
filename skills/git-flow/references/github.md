@@ -24,12 +24,15 @@ gh pr create --title "<title>" --body-file <file> --base <branch>
 
 - `--base` は省略するとリポジトリの既定ブランチ。既定ブランチ以外へ向けるときだけ明示する
 - 本文はファイルに書いて `--body-file` で渡す。`--body` に長い文字列を渡すと改行やバッククォートのエスケープで壊れやすい。`--body "$(cat <<EOF ...)"` は使わない（`SKILL.md` の実行形の規則に反する）
-- 本文ファイルは、リポジトリのルートの中の gitignore された場所（例: `.scratch/`）に書き、ルートからの相対パスで `--body-file` に渡す。`gh` はルートで実行する（`git rev-parse --show-toplevel` が現在地と一致する）
+- 本文ファイルは、セッションの環境の案内（system prompt の Environment）に scratchpad のパスがあれば、scratchpad に書き、その絶対パスを `--body-file` に渡す
+  - 理由: scratchpad はファイル書き込みツール・sandbox の内と外のどれからも同じ絶対パスで読め、リポジトリに置き場所も ignore の設定も要らない
+  - scratchpad のパスは環境の案内から取る。`$TMPDIR` や環境変数から組み立てたパスは、scratchpad の代わりにしない
+- scratchpad が無いセッション（API キーや Bedrock などで使う環境、`enableArtifact: false` の環境）では、リポジトリのルートの中の gitignore された場所（例: `.scratch/`）に書き、ルートからの相対パスで `--body-file` に渡す。`gh` はルートで実行する（`git rev-parse --show-toplevel` が現在地と一致する）
   - ignore されているかは `git check-ignore -q <path>` の終了コード（0 なら ignore 済み）で判定する。`-v` は `!` の否定パターンに一致しても 0 を返す
   - ignore された場所が無ければ、置き場所を `git rev-parse --git-path info/exclude` が示すファイルに足してから使う。ローカルだけの設定なので追跡されず、作成が失敗しても本文ファイルが commit に混ざらない
   - 理由: 作業ディレクトリの外へは書き込みに確認が要る環境があり、`$TMPDIR` などの環境変数は sandbox の内と外で展開先が変わる環境がある。展開先が変わると、書いたファイルとは別のファイルを `gh` が読み、古い本文のまま PR ができる
 - ファイル名にブランチ名などの要旨と日時（`date +%Y%m%d%H%M%S`）を入れる。同じ名前のファイルがあれば上書きせず別名にする
-  - 理由: 同じリポジトリの別セッションと置き場所を共有するので、名前が固定だと残骸と衝突する
+  - 理由: scratchpad の無いセッションでは同じリポジトリの別セッションと置き場所を共有するので、名前が固定だと残骸と衝突する
 - 本文ファイルは、シェルの heredoc ではなく、ファイル書き込みツールで作る。本文にコマンド名が入っていると、heredoc を含む複合コマンドとして拒否する環境がある
 - 途中段階なら `--draft`
 - 作成後に `gh pr view <番号> --json body --jq .body` で読み返し、意図した本文になっているか確かめる
