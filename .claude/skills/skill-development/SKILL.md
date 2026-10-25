@@ -73,8 +73,8 @@ gh skill preview halkn/skills "skills/<name>@skill/<name>"
 `main` へ向けて PR を作成し、`PULL_REQUEST_TEMPLATE.md` のチェックリストを記入する。
 `.github/workflows/lint.yml` が `skills/*/SKILL.md` の frontmatter 整合性
 （`name`/`description` の存在、`name` とディレクトリ名の一致）と Markdown・
-shellscript の静的検査を実行する。`gh skill publish` が担うagentskills.io仕様・
-セキュリティ検証とは重複させず、CIでしか拾えない部分だけを見る。
+shellscript・YAML の静的検査を実行する。`gh skill publish` の agentskills.io 仕様の
+検証はリリース時にしか走らないため、そのうち frontmatter の整合性だけを PR ごとに CI で見る。
 
 レビュアーは `SKILL.md` の差分を直接読む。これがそのままセキュリティ的な内容確認になる。
 確認できたら `main` に squash merge する。
@@ -92,14 +92,14 @@ gh skill update --all
 ```
 
 `gh skill update` にスコープ/エージェントを指定するフラグは無く、既知のホスト
-ディレクトリを project/user 両スコープとも自動で走査する（`gh` 2.97.0 で確認）。
+ディレクトリを project/user 両スコープとも自動で走査する（`gh` 2.103.2 で確認）。
 新リリースは各マシンが `gh skill update` を実行するまで反映されない（自動pushされない）
 ため、各端末のskill構成は常に明示的・再現可能な状態を保てる。
 
 ## タグ/リリース（必要になったら）
 
 バージョンを指定せずにインストールした場合、`gh skill` は「最新のタグ付きリリース →
-デフォルトブランチのHEAD」の順で解決する（`gh` 2.97.0 で確認）。現状このリポジトリは
+デフォルトブランチのHEAD」の順で解決する（`gh` 2.103.2 で確認）。現状このリポジトリは
 タグを切っていないため、利用者には `main` の HEAD が入る。
 
 「複数端末で同じ状態に固定したい」「壊れた変更を踏みたくない」という要求が出た時点で、
@@ -114,8 +114,9 @@ git push origin v0.1.0
 gh skill publish --tag v0.1.0
 ```
 
-`gh skill publish` はagentskills.io仕様・リポジトリ設定（tag protection・secret scanning・
-code scanning）を検証し、provenance付きのGitHub Releaseを作成する。個別のskillを固定
+`gh skill publish` はagentskills.io仕様（名前の規則・`name` とディレクトリ名の一致・必須フィールド・
+`allowed-tools` の形式）を検証し、GitHub Releaseを作成する。tag protection の ruleset が無いときは
+警告を出す（`gh` 2.103.2 の `--help` と `--dry-run` で確認）。個別のskillを固定
 したいだけなら、タグを切らずに `gh skill install ... --pin <sha>` でも足りる。
 
 ## PRチェックリスト
