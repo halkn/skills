@@ -4,6 +4,7 @@ set -uo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# PostToolUse フックは終了コード 2 のときだけ stderr を Claude に渡す（1 はユーザーへの通知だけ）。CI はどちらでも失敗する。
 status=0
 
 for file in "$repo_root"/skills/*/SKILL.md; do
@@ -18,13 +19,13 @@ for file in "$repo_root"/skills/*/SKILL.md; do
     c==1
   ' "$file"); then
     echo "$rel: frontmatter(---ブロック)が見つかりません" >&2
-    status=1
+    status=2
     continue
   fi
 
   if ! printf '%s' "$frontmatter" | yq eval '.' - >/dev/null 2>&1; then
     echo "$rel: frontmatterがYAMLとしてパースできません" >&2
-    status=1
+    status=2
     continue
   fi
 
@@ -33,15 +34,15 @@ for file in "$repo_root"/skills/*/SKILL.md; do
 
   if [ -z "$name" ]; then
     echo "$rel: frontmatterに name がありません" >&2
-    status=1
+    status=2
   elif [ "$name" != "$dir_name" ]; then
     echo "$rel: frontmatterの name '$name' がディレクトリ名 '$dir_name' と一致しません" >&2
-    status=1
+    status=2
   fi
 
   if [ -z "$description" ]; then
     echo "$rel: frontmatterに description がありません" >&2
-    status=1
+    status=2
   fi
 done
 

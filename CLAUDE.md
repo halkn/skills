@@ -28,7 +28,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ## gh skill CLIの構文(要注意)
 
-ドキュメントやIssue上の想定と、実際の `gh skill`(2.97.0で確認)は以下が異なる。想定で書かない。
+ドキュメントやIssue上の想定と、実際の `gh skill`(2.103.2で確認)は以下が異なる。想定で書かない。
 
 - `--scope` の値は `project` または `user`(`repository` ではない)
 - バージョン指定は `skill-path@version` の形(例: `skills/foo@v1.0.0`)。`owner/repo@version` ではない
