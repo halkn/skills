@@ -1,5 +1,6 @@
 ---
 name: review-report
+license: MIT
 description: >
   code review の指摘を、該当 diff と並べて読める1枚のHTMLレポートにする。
   「レビュー結果をHTMLで見たい」「PRのレビュー指摘を可視化して」「指摘を一覧で確認したい」

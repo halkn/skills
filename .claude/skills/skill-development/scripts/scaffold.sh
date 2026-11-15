@@ -32,6 +32,7 @@ mkdir -p "$skill_dir"
 cat >"$skill_dir/SKILL.md" <<EOF
 ---
 name: ${name}
+license: MIT
 description: >
   TODO: このskillが「何をするか」ではなく「いつ使うか」を具体的なトリガー
   フレーズで書く(例: "ユーザーが〜と言ったときに使う")。descriptionは

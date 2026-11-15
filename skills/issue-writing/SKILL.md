@@ -1,5 +1,6 @@
 ---
 name: issue-writing
+license: MIT
 description: Claude Code などのコーディングエージェントに渡す issue・設計書の本文を、決まった書式と粒度で Markdown で書く手順。本文はそのまま実装計画になり、エージェントが読んで実装する前提で書く。「issue を立てて」「issue にして」「これを issue に起こして」「実装計画を issue に書いて」「issue の本文を整えて」「この issue を書き直して」「エージェント向けの設計書・仕様書を書いて」「Claude Code に実装を依頼する文を書いて」と言われたとき、および会話で固まった設計・計画を issue として残すときに使う。GitHub 以外のトラッカー（Azure Boards など）や、claude.ai のチャットで本文だけを作る場合にも使う。issue へのコメントや PR 本文には使わない。
 ---
 

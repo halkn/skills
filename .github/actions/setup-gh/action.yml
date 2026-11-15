@@ -1,0 +1,42 @@
+name: Setup gh
+description: >
+  gh skill を使うため、バージョンを固定した GitHub CLI を PATH に入れる。
+  ランナーに同梱の gh はバージョンが固定されず、gh skill(2.90.0 以降)を持たないことがある。
+inputs:
+  version:
+    description: GitHub CLI のバージョン(先頭の v なし)。上げるときは下の sha256 も同じ版のものに直す
+    default: 2.103.2
+  sha256-linux-amd64:
+    description: gh_<version>_linux_amd64.tar.gz の SHA-256(リリースの gh_<version>_checksums.txt の値)
+    default: 62ccf747115ddc61237efffdde66a3c8f70ba249433dc64f70801089b59c59c8
+  sha256-linux-arm64:
+    description: gh_<version>_linux_arm64.tar.gz の SHA-256(リリースの gh_<version>_checksums.txt の値)
+    default: 4c3e99a50bd8b181a3fe9d69b25dd978bac768148d88f01507c6b4d1ef61a443
+runs:
+  using: composite
+  steps:
+    - name: Install gh
+      shell: bash
+      env:
+        GH_CLI_VERSION: ${{ inputs.version }}
+        SHA256_AMD64: ${{ inputs.sha256-linux-amd64 }}
+        SHA256_ARM64: ${{ inputs.sha256-linux-arm64 }}
+      run: |
+        case "${RUNNER_OS}/${RUNNER_ARCH}" in
+          Linux/X64) arch=amd64 sha256="${SHA256_AMD64}" ;;
+          Linux/ARM64) arch=arm64 sha256="${SHA256_ARM64}" ;;
+          *)
+            echo "未対応のランナー: ${RUNNER_OS}/${RUNNER_ARCH}" >&2
+            exit 1
+            ;;
+        esac
+        dir="${RUNNER_TEMP}/gh"
+        archive="${RUNNER_TEMP}/gh.tar.gz"
+        mkdir -p "${dir}"
+        # contents: write のトークンで動かすバイナリなので、固定したハッシュと一致したものだけ展開する。
+        curl -fsSL -o "${archive}" \
+          "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_${arch}.tar.gz"
+        echo "${sha256}  ${archive}" | sha256sum -c -
+        tar -xzf "${archive}" -C "${dir}" --strip-components=1
+        echo "${dir}/bin" >>"${GITHUB_PATH}"
+        "${dir}/bin/gh" --version

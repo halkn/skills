@@ -1,5 +1,6 @@
 ---
 name: git-flow
+license: MIT
 description: ブランチ作成から commit・push・PR 作成・マージまでの Git 作業手順（GitHub / gh 前提）。commit メッセージの書き方、変更の粒度、issue の紐付け、git switch / git restore / git revert の使い分けを含む。git でコミットする・ブランチを切る・push する・PR を出す・マージする・変更を戻す・履歴を直すといった操作を求められたとき、および実装タスクの完了後にその変更をコミットするときに使う。「これをコミットして」「PR にして」「元に戻して」のように「git」という語が無い依頼も含む。
 ---
 

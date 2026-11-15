@@ -2,18 +2,44 @@
 name: skill-development
 description: >
   halkn/skillsリポジトリで新しいAgent Skillを作成・改善・リリースするときの手順。
-  skillを追加/編集したい、gh skillで配布したい、複数端末に同期したい、というときに使う。
+  skillを追加/編集したい、gh skillやnpx skillsで配布したい、複数端末に同期したい、というときに使う。
+metadata:
+  internal: true
 ---
 
 # skill-development
 
-`halkn/skills` は、`gh skill`（GitHub CLI の Agent Skills 配布機能）経由で複数端末に
-Skill を配布・同期するためのリポジトリです。このドキュメントは、このリポジトリで
+`halkn/skills` は、`gh skill`（GitHub CLI）と `npx skills`（Vercel の Skills CLI）の2経路で
+複数端末に Skill を配布・同期するためのリポジトリです。このドキュメントは、このリポジトリで
 Skill を作る・育てる・配布するときの手順そのものです。人間が読む開発者向けドキュメント
 としても、Claude Code がこのリポジトリで作業する際にトリガーされる Skill としても機能します。
 
-バージョニング・検証・配布は `gh skill` 自身の機能に任せます。このリポジトリ側では
-車輪の再発明をしません。
+検証・配布・更新は両CLIの機能に任せ、リポジトリ側では再実装しません。リポジトリ側が持つのは、
+「両CLIで同じskillが入ること」を確かめるCIと、`skills/` の変更ごとにリリースを作るCDだけです。
+
+## 配布の仕組み
+
+| 段階 | 仕組み | 定義 |
+|------|--------|------|
+| PR | frontmatter・Markdown・shell・YAML の静的検査、`gh skill publish --dry-run`、`npx skills` で入るskillが `skills/` と一致するかの検査 | `.github/workflows/ci.yml` |
+| main へのマージ | `skills/**` が変わったときだけ、`scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグと Release を作る | `.github/workflows/release.yml` |
+| 各端末 | `gh skill update --all` または `npx skills update --global --yes` を実行したときだけ反映される | README |
+
+- `gh skill` は版を指定しないと「最新のリリース → `main` の HEAD」、`npx skills` は `main` の HEAD を入れる。`skills/` の変更ごとにリリースするので、両者の内容は一致する。
+- `skills/` 以外（README・CI・`.claude/` など）だけの変更ではリリースしない。配布物が変わらないため。
+- `npx skills` は `skills/` に加えて `.claude/skills/` なども探索する。リポジトリ専用skillには frontmatter に `metadata.internal: true` を付けて配布対象から外す。付け忘れは `scripts/validate-skill-frontmatter.sh` と CI の `distribution-npx` ジョブで検出する。
+
+### 版の決め方
+
+`scripts/next-version.sh` が、直近の `v*` タグ以降に `skills/` を変えたコミットの件名から決める。
+squash merge なので、件名は PR タイトルになる。
+
+- タグが無い: `v0.1.0`
+- `feat:` / `add:` で始まる、または破壊的変更（`type!:`）を含む: minor を上げる（1.0.0 以降の破壊的変更は major）
+- それ以外: patch を上げる
+
+手動でリリースし直したいときは、Actions の Release ワークフローを `workflow_dispatch` で実行する。
+前回のタグ以降に `skills/` の変更が無ければ何もしない。
 
 ## Skill の構造
 
@@ -61,70 +87,55 @@ ln -s "$(pwd)/skills/<name>" ~/.claude/skills/<name>
 sandbox で `~/.claude/skills` への書き込みを禁じている環境では、Claude はリンクの作成・
 削除を実行できない。コマンドを提示し、ユーザーに `!` 付きで実行してもらう。
 
-`gh skill install` が辿る実際の経路（provenance・メタデータ注入・ファイル取得）まで
-確認したいときだけ、ブランチを push してから使い捨てディレクトリで試す。
+配布経路での入り方まで確かめたいときは、次を使う。
 
 ```bash
+# npx skills で入るskillの一覧(CI の distribution-npx と同じ検査)
+scripts/check-npx-skills.sh
+
+# gh skill が辿る経路(provenance・メタデータ注入・ファイル取得)。ブランチの push が必要
 gh skill preview halkn/skills "skills/<name>@skill/<name>"
 ```
 
 ### 3. PR作成・CI・マージ
 
 `main` へ向けて PR を作成し、`PULL_REQUEST_TEMPLATE.md` のチェックリストを記入する。
-`.github/workflows/lint.yml` が `skills/*/SKILL.md` の frontmatter 整合性
-（`name`/`description` の存在、`name` とディレクトリ名の一致）と Markdown・
-shellscript・YAML の静的検査を実行する。`gh skill publish` の agentskills.io 仕様の
-検証はリリース時にしか走らないため、そのうち frontmatter の整合性だけを PR ごとに CI で見る。
+PR タイトルは版の決定に使うので、`feat:`/`add:`/`fix:` などの種別を付ける（「版の決め方」参照）。
+CI（`.github/workflows/ci.yml`）の内容は CLAUDE.md の「CI/CD」節にある。
 
 レビュアーは `SKILL.md` の差分を直接読む。これがそのままセキュリティ的な内容確認になる。
-確認できたら `main` に squash merge する。
+確認できたら `main` に squash merge する。`skills/` が変わっていれば Release ワークフローが
+タグと Release を作る。
 
 ### 4. 各端末に取り込む
 
-マージ後、各マシンで更新を取り込む。
+各端末では、`gh skill` か `npx skills` のどちらか一方だけを使う。どちらも
+`~/.claude/skills/<name>` に入れるため、混ぜると片方の更新がもう片方の管理外のファイルを上書きする。
 
 ```bash
-# 初回のみ（ユーザースコープ = マシン全体で有効）
+# gh skill: 初回 / 更新
 gh skill install halkn/skills --agent claude-code --scope user --all
-
-# 以降の更新
 gh skill update --all
+
+# npx skills: 初回 / 更新
+npx skills add halkn/skills --global --agent claude-code --skill '*' --yes
+npx skills update --global --yes
 ```
 
 `gh skill update` にスコープ/エージェントを指定するフラグは無く、既知のホスト
 ディレクトリを project/user 両スコープとも自動で走査する（`gh` 2.103.2 で確認）。
-新リリースは各マシンが `gh skill update` を実行するまで反映されない（自動pushされない）
-ため、各端末のskill構成は常に明示的・再現可能な状態を保てる。
+どちらの経路でも、新リリースは各端末で update を実行するまで反映されない（自動pushされない）。
 
-## タグ/リリース（必要になったら）
-
-バージョンを指定せずにインストールした場合、`gh skill` は「最新のタグ付きリリース →
-デフォルトブランチのHEAD」の順で解決する（`gh` 2.103.2 で確認）。現状このリポジトリは
-タグを切っていないため、利用者には `main` の HEAD が入る。
-
-「複数端末で同じ状態に固定したい」「壊れた変更を踏みたくない」という要求が出た時点で、
-リポジトリ全体のセマンティックバージョン（skill個別ではない）でタグを切り、リリースする。
-
-```bash
-git switch main
-git fetch origin
-git merge --ff-only origin/main
-git tag -a v0.1.0 -m "v0.1.0"
-git push origin v0.1.0
-gh skill publish --tag v0.1.0
-```
-
-`gh skill publish` はagentskills.io仕様（名前の規則・`name` とディレクトリ名の一致・必須フィールド・
-`allowed-tools` の形式）を検証し、GitHub Releaseを作成する。tag protection の ruleset が無いときは
-警告を出す（`gh` 2.103.2 の `--help` と `--dry-run` で確認）。個別のskillを固定
-したいだけなら、タグを切らずに `gh skill install ... --pin <sha>` でも足りる。
+版を固定したいときは、`gh skill` は `skills/<name>@vX.Y.Z` または `--pin <tag-or-sha>`、
+`npx skills` は `halkn/skills@vX.Y.Z` を使う。
 
 ## PRチェックリスト
 
 - [ ] frontmatterの`name`がディレクトリ名と一致している
 - [ ] `description`に具体的なトリガーフレーズが含まれる
-- [ ] ローカルで動作確認済み(symlinkまたは`gh skill preview`)
+- [ ] ローカルで動作確認済み(symlink・`scripts/check-npx-skills.sh`・`gh skill preview` のいずれか)
 - [ ] `SKILL.md`が行数目安(約500行)以内、または詳細を`references/`に退避済み
 - [ ] 秘密情報や難読化されたスクリプトが含まれていない(previewしても安全)
+- [ ] PRタイトルに種別(`feat:`/`add:`/`fix:` など)が付いている
 
 詳細は `.github/PULL_REQUEST_TEMPLATE.md` と連動している。
