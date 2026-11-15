@@ -7,7 +7,7 @@ description: >
   「振り返りして」「直近のセッションを振り返って」「今日の教訓を残して」
   「CLAUDE.md や settings.json に反映すべきことを探して」「auto モードで止まった原因を調べて」と言われたときに使う。
 disable-model-invocation: true
-argument-hint: "[recent <N> | <transcript.jsonl>...]"
+argument-hint: '[recent <N> | <transcript.jsonl>...]'
 allowed-tools: >
   Bash(${CLAUDE_SKILL_DIR}/scripts/digest.sh *)
 ---

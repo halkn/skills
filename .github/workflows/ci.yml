@@ -57,6 +57,8 @@ jobs:
           enable-cache: false
       - name: Lint YAML
         run: uvx "ryl==0.29.0" check --format github .
+      - name: Check YAML formatting
+        run: uvx "ryl==0.29.0" format --check --markdown --output-format github .
 
   # 配布経路ごとに、このリポジトリから入るskillを検証する。
   distribution-gh:
