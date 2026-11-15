@@ -53,12 +53,26 @@ npx skills add halkn/skills@v0.1.0 --global --agent claude-code --skill '*' --ye
 版を指定しない場合、`gh skill` は最新のリリース、`npx skills` は `main` の HEAD を入れますが、
 `skills/` の変更ごとにリリースするので、両者の内容は一致します。
 
+### issue-writing から handoff への入れ直し
+
+`issue-writing` は `handoff` に改名しました。更新（`update`）では新しい名前の skill は入らないので、入れ直してください。
+
+```bash
+# gh skill（削除のサブコマンドが無いので、古いディレクトリは手で消す）
+gh skill install halkn/skills skills/handoff --agent claude-code --scope user
+rm -r ~/.claude/skills/issue-writing
+
+# npx skills
+npx skills remove --global --agent claude-code issue-writing --yes
+npx skills add halkn/skills --global --agent claude-code --skill handoff --yes
+```
+
 ## 保有スキル一覧
 
 | 名前 | 説明 |
 |------|------|
 | [git-flow](skills/git-flow/SKILL.md) | ブランチ作成→コミット→push→PR作成→マージのGit作業手順（GitHub / gh 前提）。GitHub以外のリモートではユーザーに確認する |
-| [issue-writing](skills/issue-writing/SKILL.md) | エージェントに渡す issue・設計書を決まった書式と粒度で書く。本文をそのまま実装計画として使える形にする。GitHub 以外やチャットでの本文作成にも対応 |
+| [handoff](skills/handoff/SKILL.md) | 作業を別のセッション・別のリポジトリ・issue・設計書に引き継ぐ文を書く。行き先を選び、今すぐ続けるセッションには貼り付ける引き継ぎ文を、後で着手する作業には実装計画として使える issue・設計書を書く。GitHub 以外やチャットでの本文作成にも対応 |
 | [review-report](skills/review-report/SKILL.md) | `/code-review` の指摘を、該当 diff と並べて読める1枚のHTMLレポートにする。レビュー自体は行わない |
 
 ## 開発フロー
