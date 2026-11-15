@@ -52,7 +52,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Lint YAML
-        run: pipx run "ryl==0.21.0" check --format github .
+        run: pipx run "ryl==0.29.0" check --format github .
 
   # 配布経路ごとに、このリポジトリから入るskillを検証する。
   distribution-gh:
