@@ -30,6 +30,7 @@
 ```yaml
 ---
 name: <skill-name>
+license: MIT
 description: >
   いつ使うかを具体的なトリガーフレーズで書く。
 ---
@@ -41,6 +42,8 @@ description: >
   曖昧な説明はトリガー漏れ・誤トリガーの原因になる。
   - 悪い例: `description: PDFを扱うためのskill`
   - 良い例: `description: ユーザーがPDFフォームに入力・記入したいときに使う`
+- `license`: 必須ではないが、`gh skill publish` が推奨項目として無いと警告する。
+  リポジトリの LICENSE に合わせて `MIT` を書く。
 - `allowed-tools` を指定する場合は文字列で書く(配列ではない)。
   `gh skill publish` はこの形式を検証する(PRのCIで `--dry-run` を実行する)。
 
