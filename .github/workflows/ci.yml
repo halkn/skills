@@ -51,8 +51,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: 0.13.8
+          enable-cache: false
       - name: Lint YAML
-        run: pipx run "ryl==0.29.0" check --format github .
+        run: uvx "ryl==0.29.0" check --format github .
 
   # 配布経路ごとに、このリポジトリから入るskillを検証する。
   distribution-gh:
