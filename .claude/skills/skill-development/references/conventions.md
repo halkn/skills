@@ -12,6 +12,19 @@
 - `gh skill install owner/repo skills/<name>` はこのディレクトリ構造を前提に
   スキルを解決するため、不一致があるとインストールに失敗する。
 
+## リポジトリ専用skill(`.claude/skills/`)
+
+- `gh skill` は隠しディレクトリを既定でスキップするが、`npx skills` は `.claude/skills/` も探索する。
+- そのため `.claude/skills/<name>/SKILL.md` には次を付け、`npx skills` の配布対象から外す。
+  `INSTALL_INTERNAL_SKILLS=1` を付けたときだけ入る。
+
+  ```yaml
+  metadata:
+    internal: true
+  ```
+
+- 付け忘れは `scripts/validate-skill-frontmatter.sh`(フック・CI)で検出する。
+
 ## frontmatterの必須フィールド
 
 ```yaml
@@ -29,7 +42,7 @@ description: >
   - 悪い例: `description: PDFを扱うためのskill`
   - 良い例: `description: ユーザーがPDFフォームに入力・記入したいときに使う`
 - `allowed-tools` を指定する場合は文字列で書く(配列ではない)。
-  `gh skill publish` はこの形式を検証する。
+  `gh skill publish` はこの形式を検証する(PRのCIで `--dry-run` を実行する)。
 
 ## 行数・プログレッシブディスクロージャの目安
 
@@ -51,7 +64,7 @@ description: >
 
 ## セキュリティレビューの観点
 
-`gh skill preview`/`gh skill install` はSKILL.md本体だけでなく `scripts/` 配下の
+`gh skill`・`npx skills` はSKILL.md本体だけでなく `scripts/` 配下の
 スクリプトも取得・実行され得る。PRレビュー時は以下を確認する。
 
 - スクリプトが難読化されていない(人間が読んで内容を理解できる)。

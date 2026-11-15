@@ -1,0 +1,22 @@
+name: Setup gh
+description: >
+  gh skill を使うため、バージョンを固定した GitHub CLI を PATH に入れる。
+  ランナーに同梱の gh はバージョンが固定されず、gh skill(2.90.0 以降)を持たないことがある。
+inputs:
+  version:
+    description: GitHub CLI のバージョン(先頭の v なし)
+    default: 2.103.2
+runs:
+  using: composite
+  steps:
+    - name: Install gh
+      shell: bash
+      env:
+        GH_CLI_VERSION: ${{ inputs.version }}
+      run: |
+        dir="${RUNNER_TEMP}/gh"
+        mkdir -p "${dir}"
+        curl -sSL "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_amd64.tar.gz" \
+          | tar -xz -C "${dir}" --strip-components=1
+        echo "${dir}/bin" >>"${GITHUB_PATH}"
+        "${dir}/bin/gh" --version

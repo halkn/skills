@@ -1,0 +1,53 @@
+name: Release
+
+# skills/ の変更が main に入るたびにタグを切り、gh skill publish で GitHub Release を作る。
+# gh skill は「最新のリリース → main の HEAD」、npx skills は「main の HEAD」を既定で入れるため、
+# skills/ を変えるたびにリリースして、どちらの経路でも同じ内容が入るようにする。
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - skills/**
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup-gh
+      - name: Decide next version
+        id: version
+        run: |
+          tag="$(scripts/next-version.sh)"
+          echo "tag=${tag}" >>"${GITHUB_OUTPUT}"
+          if [ -n "${tag}" ]; then
+            echo "次のリリース: ${tag}"
+          else
+            echo "前回のリリース以降 skills/ に変更が無いため、リリースしない"
+          fi
+      - name: Push tag
+        if: steps.version.outputs.tag != ''
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "${TAG}"
+          git push origin "${TAG}"
+      - name: Publish release
+        if: steps.version.outputs.tag != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh skill publish --tag "${TAG}"

@@ -1,4 +1,4 @@
-name: Lint
+name: CI
 
 on:
   pull_request:
@@ -53,3 +53,26 @@ jobs:
       - uses: actions/checkout@v7
       - name: Lint YAML
         run: pipx run "ryl==0.21.0" check --format github .
+
+  # 配布経路ごとに、このリポジトリから入るskillを検証する。
+  distribution-gh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-gh
+      - name: Validate skills with gh skill publish --dry-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh skill publish --dry-run
+
+  distribution-npx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Check skills installed by npx skills
+        env:
+          SKILLS_CLI_VERSION: 1.7.4
+        run: scripts/check-npx-skills.sh

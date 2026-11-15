@@ -4,17 +4,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## リポジトリの目的
 
-`halkn/skills` は、Claude Code用のAgent Skillを `gh skill`(GitHub CLIのAgent Skills配布機能)経由で
-複数端末に配布・同期するためのリポジトリ。バージョニング・検証・配布は `gh skill` 自身の機能
-(タグ/リリース・`publish`・`install`/`update`/`--pin`)に任せ、リポジトリ側では再実装しない。
+`halkn/skills` は、Claude Code用のAgent Skillを複数端末に配布・同期するためのリポジトリ。
+配布経路は `gh skill`(GitHub CLI)と `npx skills`(Vercelの Skills CLI、npmパッケージ `skills`)の2つ。
+検証・配布・更新は両CLIの機能(`publish`・`install`/`add`・`update`・版の固定)に任せ、リポジトリ側では
+再実装しない。リポジトリ側が持つのは、両CLIで同じskillが入ることを確かめるCIと、`skills/` の変更ごとに
+リリースを作るCDだけ。
 
 ## ディレクトリの使い分け
 
 - `skills/<name>/SKILL.md` — 配布対象。`gh skill install`/`gh skill publish` が発見する。
   frontmatterの `name` はディレクトリ名と完全一致させる。
 - `.claude/skills/<name>/SKILL.md` — このリポジトリ専用のツール(例: `skill-development`)。
-  `gh skill` は既定でこのような隠しディレクトリをスキップするため配布物には含まれない
-  (`--allow-hidden-dirs` を付けない限り)。
+  `gh skill` は既定で隠しディレクトリをスキップするが、`npx skills` は `.claude/skills/` も探索する。
+  そのためfrontmatterに `metadata.internal: true` を必ず付けて `npx skills` の配布対象から外す
+  (`scripts/validate-skill-frontmatter.sh` が検証する)。
 - `scripts/` (リポジトリ直下) — Claude Codeのhookなど、特定のskillに属さないリポジトリ全体の
   ツール置き場。skill固有のスクリプトは`skills/<name>/scripts/`や
   `.claude/skills/<name>/scripts/`に置く。
@@ -36,23 +39,43 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 - `gh skill update` に `--agent`/`--scope` は無い。project/user両スコープを自動走査する
 - バージョン未指定時の解決順は「最新のタグ付きリリース → デフォルトブランチのHEAD」
 
+## npx skills CLIの構文(要注意)
+
+`vercel-labs/skills` のREADME・docs/commands.md(2026-11時点、npm最新は1.8.1)で確認した内容。
+
+- インストール先の既定はプロジェクト(`./.claude/skills/`)。ユーザースコープは `--global`(`~/.claude/skills/`)
+- skillの指定は `--skill <name>`(全部は `--skill '*'`)、エージェントは `--agent claude-code`
+- 版の固定は `owner/repo@<tag-or-commit>`(`gh skill` の `skill-path@version` とは形が違う)
+- 更新は `npx skills update [--global|--project] [--yes]`
+- 探索対象は `skills/`・`.claude/skills/`・`.agents/skills/` などで、隠しディレクトリも含む
+- 匿名の利用統計を送る。`DISABLE_TELEMETRY=1` で止まる
+
 ## PRのマージ方針
 
 `main` へのマージは squash merge(`gh pr merge --squash`)。`skills/git-flow` スキルの既定
 (通常merge)をこのリポジトリでは上書きする。
 
-## CI
+## CI/CD
 
-ワークフローは `.github/workflows/lint.yml` の1本のみ。全PRを対象に、`skills/*/SKILL.md` の
-frontmatter検証(`scripts/validate-skill-frontmatter.sh`)・Markdown(`rumdl`)・shellscriptの
-静的検査とフォーマット(`shuck`)・YAML(`ryl`)を実行する。
-frontmatter検証の対象は `skills/` 配下のみ(`.claude/skills/` は意図的に対象外)。
+ワークフローは2本。
+
+- `.github/workflows/ci.yml`(全PR): `skills/*/SKILL.md` と `.claude/skills/*/SKILL.md` のfrontmatter検証
+  (`scripts/validate-skill-frontmatter.sh`)・Markdown(`rumdl`)・shellscriptの静的検査とフォーマット
+  (`shuck`)・YAML(`ryl`)に加え、配布経路ごとの検査を行う。
+  - `distribution-gh`: `gh skill publish --dry-run` でagentskills.io仕様を検証する
+  - `distribution-npx`: `scripts/check-npx-skills.sh` で、`npx skills` で入るskillが `skills/` 配下と過不足なく一致するかを見る(`.claude/skills/` の混入を検出する)
+- `.github/workflows/release.yml`(`main` へのpushで `skills/**` が変わったとき、または手動): `scripts/next-version.sh` で版を決め、タグをpushし、`gh skill publish --tag` でReleaseを作る。版はPRタイトル(squash mergeのコミット件名)の種別で決まる。
+
+`gh` は `.github/actions/setup-gh` で版を固定して入れる(ランナー同梱の `gh` は版が固定されないため)。
+`npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。どちらも上げるときはこの2か所を直す。
+
 `.rumdl.toml` でMD013(行長制限)は無効化している(日本語の文章は1行1段落で書く方針のため)。
 
-ローカルで同じ検証をする場合(`yq`・`rumdl`・`shuck`・`ryl` が必要):
+ローカルで同じ検証をする場合(`yq`(mikefarah版)・`rumdl`・`shuck`・`ryl` が必要):
 
 ```bash
 scripts/validate-skill-frontmatter.sh
+scripts/check-npx-skills.sh   # Node.js 22.20以降が必要
 rumdl check .
 shuck check .
 shuck format --check .
