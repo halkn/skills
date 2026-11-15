@@ -73,6 +73,14 @@ uv は `astral-sh/setup-uv` の `version` で、`validate-internal-skills.py` �
 `rumdl`・`shuck`・`ryl` はそれぞれ公式の action(`rvben/rumdl`・`ewhauser/shuck-action`・`owenlamont/ryl-action`)で入れ、版は `ci.yml` で固定する。
 `npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。上の「npx skills CLIの構文」節を確かめた版と揃える。
 
+ワークフローと composite action の `uses:` は、ローカルの action(`./` で始まるもの)を除き、公式の `actions/*` も含めて40桁のコミットSHAで固定する。
+タグはあとから別のコミットに付け替えられるため、タグ参照では action 本体の改ざんを防げない。
+SHA の後ろには、そのコミットを指す完全な版のタグを `# vX.Y.Z` の形でコメントに残す(メジャータグ `v1` などは書かない)。
+SHA は `git ls-remote --tags https://github.com/<owner>/<repo>.git` で、注釈付きタグなら `^{}` の行(タグが指すコミット)の値を使う。
+更新は `.github/dependabot.yml`(`github-actions` エコシステム、週1回、全 action を1つのPRにまとめる)に任せる。Dependabot は SHA とタグのコメントを一緒に書き換える。公開から7日経っていない版は取り込まない(`cooldown`)。
+Dependabot が上げるのは action 本体だけで、action の入力で固定したツールの版(`rvben/rumdl` の `version`、`ewhauser/shuck-action` の `shuck-version`、`astral-sh/setup-uv` の `version`)は変わらないので、必要なら手で上げる。
+例外として `owenlamont/ryl-action` は `version` を指定せず action の版で ryl の版が決まるため、action の更新で ryl の版も上がる。
+
 `.rumdl.toml` でMD013(行長制限)は無効化している(日本語の文章は1行1段落で書く方針のため)。
 
 ローカルで同じ検証をする場合(`gh`(2.90.0以降)・`uv`・`rumdl`・`shuck`・`ryl` が必要):

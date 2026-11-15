@@ -16,8 +16,8 @@ jobs:
   frontmatter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         with:
           version: 0.13.8
           enable-cache: false
@@ -27,8 +27,8 @@ jobs:
   rumdl:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: rvben/rumdl@v0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: rvben/rumdl@0d3d6e4f07c585a9433df162949ca0fe280a40dd  # v0.3.4
         with:
           version: 0.3.4
           report-type: annotations
@@ -36,13 +36,13 @@ jobs:
   shuck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Lint shell scripts
-        uses: ewhauser/shuck-action@v1
+        uses: ewhauser/shuck-action@9cadfc28756c064e2069d58dda7ce83ad7cb8152  # v1.0.0
         with:
           shuck-version: 0.1.1
       - name: Check shell script formatting
-        uses: ewhauser/shuck-action@v1
+        uses: ewhauser/shuck-action@9cadfc28756c064e2069d58dda7ce83ad7cb8152  # v1.0.0
         with:
           shuck-version: 0.1.1
           mode: format
@@ -51,9 +51,9 @@ jobs:
   ryl:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      # action のタグが ryl の版を固定する(version の既定値がタグと同じ版)。
-      - uses: owenlamont/ryl-action@v0.29.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      # action の版が ryl の版を固定する(version の既定値が action の版と同じ版)。
+      - uses: owenlamont/ryl-action@d1a3c7c9942a41ef9aa6c10b8e03f464ecdaf085  # v0.29.0
         with:
           install-only: true
       - name: Lint YAML
@@ -67,7 +67,7 @@ jobs:
   distribution-gh:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - uses: ./.github/actions/setup-gh
       - name: Validate skills with gh skill publish --dry-run
         env:
@@ -77,8 +77,8 @@ jobs:
   distribution-npx:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38  # v6.5.0
         with:
           node-version: 22
       - name: Check skills installed by npx skills
