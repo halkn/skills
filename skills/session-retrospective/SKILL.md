@@ -141,7 +141,7 @@ ${CLAUDE_SKILL_DIR}/scripts/digest.sh <dir>/*.jsonl > <dir>/digest.md
 採用されたものだけを書く。
 
 - 作業ディレクトリの中: その場で書き、関係する検査（lint・formatter・テスト）を回す
-- 作業ディレクトリの外（グローバルの CLAUDE.md・別のリポジトリの settings.json など）: 編集しない。そのリポジトリで Claude Code に渡すプロンプトを、教訓・行き先・根拠ごと 1 つのコードブロックで出す
+- 作業ディレクトリの外（グローバルの CLAUDE.md・別のリポジトリの settings.json など）: 編集しない。そのリポジトリで Claude Code に渡すプロンプトを、教訓・行き先・根拠ごと 1 つのコードブロックで出す。`handoff` skill が使えるなら、行き先を別のリポジトリのセッションとして handoff に書かせる。使えなければ自分で書く
 
 ### 7. 片付ける
 

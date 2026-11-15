@@ -1,0 +1,16 @@
+[
+  {"query": "この作業の続きを別のターミナルで起動したセッションでやりたい。向こうに何て伝えればいい？", "should_trigger": true},
+  {"query": "ここまでの検討結果を dotfiles リポジトリのセッションに引き継ぎたい", "should_trigger": true},
+  {"query": "halkn/dotfiles で実行するプロンプトを作って。このセッションからは向こうの settings.json を触れないので", "should_trigger": true},
+  {"query": "修正しきれなかった分を別のリポジトリに引き継いでおいて", "should_trigger": true},
+  {"query": "spike で分かったことを、本実装をするセッションが読めるように残しておいて", "should_trigger": true},
+  {"query": "これを issue にして", "should_trigger": true},
+  {"query": "#32 の本文を書き直して", "should_trigger": true},
+  {"query": "Claude Code に実装を依頼する文を書いて", "should_trigger": true},
+  {"query": "この変更の PR の本文を書いて", "should_trigger": false},
+  {"query": "#24 に、CI の待ち時間は 10 分で足りそうとコメントしておいて", "should_trigger": false},
+  {"query": "コミットして push して", "should_trigger": false},
+  {"query": "このセッションを振り返って、CLAUDE.md に足すことを探して", "should_trigger": false},
+  {"query": "README のインストール手順を、初めて使う人向けに書き直して", "should_trigger": false},
+  {"query": "今日やったことを日報用に 3 行でまとめて", "should_trigger": false}
+]
