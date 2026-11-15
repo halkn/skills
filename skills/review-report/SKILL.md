@@ -9,7 +9,7 @@ description: >
 allowed-tools: >
   Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/render_review.py *),
   Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/validate_review.py *)
-argument-hint: "[pr-number | pr-url]"
+argument-hint: '[pr-number | pr-url]'
 ---
 
 # review-report

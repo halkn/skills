@@ -61,7 +61,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 - `.github/workflows/ci.yml`(全PR): `skills/*/SKILL.md` と `.claude/skills/*/SKILL.md` のfrontmatter検証
   (`scripts/validate-skill-frontmatter.sh`)・Markdown(`rumdl`)・shellscriptの静的検査とフォーマット
-  (`shuck`)・YAML(`ryl`)に加え、配布経路ごとの検査を行う。
+  (`shuck`)・YAMLの静的検査とフォーマット(`ryl`)に加え、配布経路ごとの検査を行う。
   - `distribution-gh`: `gh skill publish --dry-run` でagentskills.io仕様を検証する
   - `distribution-npx`: `scripts/check-npx-skills.sh` で、`npx skills` で入るskillが `skills/` 配下と過不足なく一致するかを見る(`.claude/skills/` の混入を検出する)
 - `.github/workflows/release.yml`(`main` へのpushで `skills/**` が変わったとき、または手動。手動でも `main` 以外では動かない): `scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグとReleaseを作る(タグを先にpushすると `publish` が既存タグとして拒否する)。版はPRタイトル(squash mergeのコミット件名)の種別で決まる。
@@ -81,9 +81,13 @@ rumdl check .
 shuck check .
 shuck format --check .
 ryl check .
+ryl format --check --markdown .
 ```
 
 新しいshellscriptを書いたら `shuck format <file>` で整形してからコミットする。
+YAMLとMarkdown内のYAML(frontmatterとyamlのコードブロック)は `ryl format --markdown .` で整形する。
+`--markdown` は `ryl format` にだけ付け、`.ryl.toml` の `[files].markdown` には書かない(書くと `ryl check` の対象にもMarkdownが入る)。
+`ryl` の版は `ci.yml` で固定し、uv も `astral-sh/setup-uv` の `version` で固定する。
 
 `shuck.toml`(Google Shell Style Guide準拠)と`.ryl.toml`はリポジトリ直下に置く。どちらのツールも
 ユーザーグローバル設定とプロジェクト設定をマージせず、設定が無いと既定のルールが空

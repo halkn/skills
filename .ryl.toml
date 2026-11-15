@@ -46,3 +46,6 @@ max = 2
 
 [lint.rules.quoted-strings]
 required = "only-when-needed"
+
+[format]
+brace-spacing = true
