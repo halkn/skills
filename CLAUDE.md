@@ -27,7 +27,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 CONTRIBUTING.mdに分離しない方針(単一skillへの集約が意図的な設計)。
 
 skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` に配置する(例:
-`skills/git-flow/evals/evals.json`)。実行・評価は`empirical-prompt-tuning`スキルに委ねる。
+`skills/git-flow/evals/evals.json`)。実行・評価は`skill-creator`スキル(`skill-creator:skill-creator` プラグイン)に委ねる。
 
 ## gh skill CLIの構文(要注意)
 
