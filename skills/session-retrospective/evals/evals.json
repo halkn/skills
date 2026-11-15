@@ -1,0 +1,71 @@
+{
+  "skill_name": "session-retrospective",
+  "evals": [
+    {
+      "id": 1,
+      "name": "existing-rule-not-followed",
+      "prompt": "/session-retrospective evals/files/format-miss/session.jsonl\n\nこのリポジトリの CLAUDE.md は evals/files/format-miss/project-claude.md。",
+      "expected_output": "digest.sh で要約し、CI の shuck format 失敗 2 回とユーザーの差し戻しを教訓にする。CLAUDE.md に同じ指示が既にあるので「既存で足りるはずなのに起きた」に分類し、同じ文を足す代わりに、書いた直後に整形する hook やローカルの検査といった機械で止める方法を提案する。承認前には何も書かない。",
+      "files": [
+        "evals/files/format-miss/session.jsonl",
+        "evals/files/format-miss/project-claude.md"
+      ],
+      "expectations": [
+        "[critical] 教訓の分類が「既存で足りるはずなのに起きた」で、根拠として CLAUDE.md の shuck format の行を挙げている",
+        "[critical] 採用の候補の行き先が機械による検査（hook・pre-commit・lint タスクなど）で、CLAUDE.md に同じ趣旨の文を足す提案をしていない",
+        "教訓に 最初の失敗 / 最終的な解決 / 先に知っていれば済んだこと / 根拠 の 4 項目があり、根拠に CI の失敗が 2 回であることが書かれている",
+        "実行記録で、渡されたパスをコピーを頼まずに digest.sh に渡している",
+        "実行記録で、ユーザーの承認の前にファイルを書き込んでいない",
+        "採用の候補に、そのまま適用できる設定（hook の settings.json の記述やスクリプト）と、適用後に手で確かめる番号付きの手順がある"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "repeated-hook-stop",
+      "prompt": "/session-retrospective evals/files/piped-gh/session.jsonl\n\nこのリポジトリの CLAUDE.md は evals/files/piped-gh/project-claude.md。",
+      "expected_output": "digest.sh の Stops から、同じ hook に 4 回止められたことを Tool economy の教訓にする。CLAUDE.md にも hook のメッセージにも正しい打ち方があるのに起きているので「既存で足りるはずなのに起きた」に分類し、同じ文を足さずに、指示の言い回し・置き場所の見直しや、止められた形（cd の前置き・2>/dev/null・&&）を指示や hook のメッセージで具体的に示すことを提案する。",
+      "files": [
+        "evals/files/piped-gh/session.jsonl",
+        "evals/files/piped-gh/project-claude.md"
+      ],
+      "expectations": [
+        "[critical] 同じ hook に 4 回止められたことを教訓にし、根拠に回数が書かれている",
+        "[critical] 分類が「既存で足りるはずなのに起きた」で、CLAUDE.md に同じ文をそのまま足す提案をしていない",
+        "提案が、止められた具体的な形（パイプ・; ・&& のほか、cd の前置きや 2>/dev/null）のどれかに触れている",
+        "実行記録で、ユーザーの承認の前にファイルを書き込んでいない",
+        "hook がユーザースコープ（~/.claude/hooks）にあるのに規則がプロジェクトの CLAUDE.md にしか無い、という効く範囲のずれに触れている",
+        "指示や hook のメッセージの文案に、禁止だけでなく代わりの打ち方（--json/--jq で絞る・呼び出しを分ける）が入っている"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "nothing-to-codify",
+      "prompt": "/session-retrospective evals/files/clean/session.jsonl",
+      "expected_output": "digest.sh で要約し、Stops も Tool errors も無く、ユーザーの差し戻しも無いことを確かめて、提案 0 件で終える。無理に教訓を作らない。",
+      "files": [
+        "evals/files/clean/session.jsonl"
+      ],
+      "expectations": [
+        "[critical] 採用の候補が 0 件で、提案するものが無いと明示している",
+        "Stops と Tool errors が無かったことに触れている",
+        "実行記録で、ファイルを書き込んでいない"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "recurring-across-many-sessions",
+      "prompt": "/session-retrospective evals/files/many-sessions/session-*.jsonl\n\n（20 セッション分の transcript。evals を回す前に evals/files/many-sessions/generate.sh で生成する）",
+      "expected_output": "digest.sh で 20 セッション（約 16MB）を要約し、6 つのセッションで 1 回ずつ起きた gh api の zsh glob エラー（引用符の無い ? が展開される）を教訓にする。cargo test の失敗・curl の 404・Edit の拒否はどれも一度きりなので採用の候補にしない。提案は URL を引用符で囲む指示の文案か、引用符の欠落を検出する hook の判定条件を具体的に示す。",
+      "files": [
+        "evals/files/many-sessions/generate.sh"
+      ],
+      "expectations": [
+        "[critical] 6 つのセッションにまたがる gh api の zsh glob エラー（no matches found）を教訓にし、根拠に 6 回または 6 セッションと書かれている",
+        "[critical] 一度きりのエラー（cargo test の失敗・curl の 404・Edit の拒否）を採用の候補にしていない",
+        "提案が、URL を引用符で囲む指示の文案か、引用符の無い ? を検出する hook の判定条件を具体的に示している",
+        "実行記録で、transcript を全文読み込まず（Read で丸ごと開かず）、要約や絞り込みを通して読んでいる",
+        "実行記録で、ユーザーの承認の前にファイルを書き込んでいない"
+      ]
+    }
+  ]
+}
