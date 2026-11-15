@@ -21,13 +21,13 @@ Skill を作る・育てる・配布するときの手順そのものです。�
 
 | 段階 | 仕組み | 定義 |
 |------|--------|------|
-| PR | frontmatter・Markdown・shell・YAML の静的検査、`gh skill publish --dry-run`、`npx skills` で入るskillが `skills/` と一致するかの検査 | `.github/workflows/ci.yml` |
+| PR | Markdown・shell・YAML の静的検査、`gh skill publish --dry-run`(frontmatter の検証を兼ねる)、`npx skills` で入るskillが `skills/` と一致するかの検査 | `.github/workflows/ci.yml` |
 | main へのマージ | `skills/**` が変わったときだけ、`scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグと Release を作る | `.github/workflows/release.yml` |
 | 各端末 | `gh skill update --all` または `npx skills update --global --yes` を実行したときだけ反映される | README |
 
 - `gh skill` は版を指定しないと「最新のリリース → `main` の HEAD」、`npx skills` は `main` の HEAD を入れる。`skills/` の変更ごとにリリースするので、両者の内容は一致する。
 - `skills/` 以外（README・CI・`.claude/` など）だけの変更ではリリースしない。配布物が変わらないため。
-- `npx skills` は `skills/` に加えて `.claude/skills/` なども探索する。リポジトリ専用skillには frontmatter に `metadata.internal: true` を付けて配布対象から外す。付け忘れは `scripts/validate-skill-frontmatter.sh` と CI の `distribution-npx` ジョブで検出する。
+- `npx skills` は `skills/` に加えて `.claude/skills/` なども探索する。リポジトリ専用skillには frontmatter に `metadata.internal: true` を付けて配布対象から外す。付け忘れは CI の `distribution-npx` ジョブで検出する。
 
 ### 版の決め方
 

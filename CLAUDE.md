@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `.claude/skills/<name>/SKILL.md` — このリポジトリ専用のツール(例: `skill-development`)。
   `gh skill` は既定で隠しディレクトリをスキップするが、`npx skills` は `.claude/skills/` も探索する。
   そのためfrontmatterに `metadata.internal: true` を必ず付けて `npx skills` の配布対象から外す
-  (`scripts/validate-skill-frontmatter.sh` が検証する)。
+  (付け忘れはCIの `distribution-npx` が検出する)。
 - `scripts/` (リポジトリ直下) — Claude Codeのhookなど、特定のskillに属さないリポジトリ全体の
   ツール置き場。skill固有のスクリプトは`skills/<name>/scripts/`や
   `.claude/skills/<name>/scripts/`に置く。
@@ -59,23 +59,25 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ワークフローは2本。
 
-- `.github/workflows/ci.yml`(全PR): `skills/*/SKILL.md` と `.claude/skills/*/SKILL.md` のfrontmatter検証
-  (`scripts/validate-skill-frontmatter.sh`)・Markdown(`rumdl`)・shellscriptの静的検査とフォーマット
+- `.github/workflows/ci.yml`(全PR): Markdown(`rumdl`)・shellscriptの静的検査とフォーマット
   (`shuck`)・YAMLの静的検査とフォーマット(`ryl`)に加え、配布経路ごとの検査を行う。
-  - `distribution-gh`: `gh skill publish --dry-run` でagentskills.io仕様を検証する
+  frontmatterの検証は配布経路の検査が兼ねる(専用スクリプトは持たない)。
+  - `distribution-gh`: `gh skill publish --dry-run` でagentskills.io仕様を検証する(`skills/*/SKILL.md` の name の命名規則・name とディレクトリ名の一致・name/description の有無)
   - `distribution-npx`: `scripts/check-npx-skills.sh` で、`npx skills` で入るskillが `skills/` 配下と過不足なく一致するかを見る(`.claude/skills/` の混入を検出する)
 - `.github/workflows/release.yml`(`main` へのpushで `skills/**` が変わったとき、または手動。手動でも `main` 以外では動かない): `scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグとReleaseを作る(タグを先にpushすると `publish` が既存タグとして拒否する)。版はPRタイトル(squash mergeのコミット件名)の種別で決まる。
 
 `gh` は `.github/actions/setup-gh` で版を固定して入れる(ランナー同梱の `gh` は版が固定されないため)。
 版を上げるときは、同じ action の `sha256-*` もその版の `gh_<version>_checksums.txt` の値に直す。
+サードパーティの gh セットアップ action はダウンロードしたバイナリのハッシュを検証しないため使わない(`release.yml` は `contents: write` のトークンで `gh` を動かす)。
+`rumdl`・`shuck`・`ryl` はそれぞれ公式の action(`rvben/rumdl`・`ewhauser/shuck-action`・`owenlamont/ryl-action`)で入れ、版は `ci.yml` で固定する。
 `npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。上の「npx skills CLIの構文」節を確かめた版と揃える。
 
 `.rumdl.toml` でMD013(行長制限)は無効化している(日本語の文章は1行1段落で書く方針のため)。
 
-ローカルで同じ検証をする場合(`yq`(mikefarah版)・`rumdl`・`shuck`・`ryl` が必要):
+ローカルで同じ検証をする場合(`gh`(2.90.0以降)・`rumdl`・`shuck`・`ryl` が必要):
 
 ```bash
-scripts/validate-skill-frontmatter.sh
+gh skill publish --dry-run
 scripts/check-npx-skills.sh   # Node.js 22.20以降が必要
 rumdl check .
 shuck check .
@@ -87,7 +89,6 @@ ryl format --check --markdown .
 新しいshellscriptを書いたら `shuck format <file>` で整形してからコミットする。
 YAMLとMarkdown内のYAML(frontmatterとyamlのコードブロック)は `ryl format --markdown .` で整形する。
 `--markdown` は `ryl format` にだけ付け、`.ryl.toml` の `[files].markdown` には書かない(書くと `ryl check` の対象にもMarkdownが入る)。
-`ryl` の版は `ci.yml` で固定し、uv も `astral-sh/setup-uv` の `version` で固定する。
 
 `shuck.toml`(Google Shell Style Guide準拠)と`.ryl.toml`はリポジトリ直下に置く。どちらのツールも
 ユーザーグローバル設定とプロジェクト設定をマージせず、設定が無いと既定のルールが空
@@ -97,5 +98,6 @@ YAMLとMarkdown内のYAML(frontmatterとyamlのコードブロック)は `ryl fo
 ## ローカルでのフック
 
 `.claude/settings.json` のPostToolUseフック(Write|Edit)で
-`scripts/validate-skill-frontmatter.sh` が走り、frontmatterの不整合をその場で検知する。
-CIと同じスクリプトなので、検証ルールを変えるときの同期先はこの1ファイルだけ。
+`scripts/check-skills-hook.sh` が走り、`gh skill publish --dry-run` で `skills/*/SKILL.md` のfrontmatterの不整合をその場で検知する。
+CIの `distribution-gh` と同じ検査。`gh skill` を持たない `gh`(2.90.0未満)の環境では何もしない。
+`.claude/skills/` の `metadata.internal` の付け忘れはフックでは見ず、CIの `distribution-npx` で検出する。
