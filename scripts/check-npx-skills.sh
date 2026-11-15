@@ -18,8 +18,12 @@ export DISABLE_TELEMETRY=1
 
 expected="$(find "${repo_root}/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -exec dirname {} \; \
   | xargs -n1 basename | sort)"
-actual="$(find "${work}/.claude/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -exec dirname {} \; \
-  | xargs -n1 basename | sort)"
+# 1件も入らないとインストール先が作られない。find の失敗で止めず、下の差分で何が欠けたかを見せる。
+actual=""
+if [[ -d "${work}/.claude/skills" ]]; then
+  actual="$(find "${work}/.claude/skills" -mindepth 2 -maxdepth 2 -name SKILL.md -exec dirname {} \; \
+    | xargs -n1 basename | sort)"
+fi
 
 if [[ "${expected}" != "${actual}" ]]; then
   echo "npx skills でインストールされるskillが skills/ 配下と一致しません" >&2

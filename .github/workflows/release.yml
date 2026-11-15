@@ -20,10 +20,15 @@ concurrency:
 
 jobs:
   release:
+    # 手動実行でも main 以外からはリリースしない(gh skill publish は今いるブランチを target にする)。
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
+          # gh skill publish はタグをブランチ名(main)の先頭に作る。起動時の github.sha で版を決めると、
+          # 後から入った commit にタグが付いて版とずれるため、実行時点の main の先頭で版を決める。
+          ref: main
           fetch-depth: 0
       - uses: ./.github/actions/setup-gh
       - name: Decide next version
@@ -36,18 +41,10 @@ jobs:
           else
             echo "前回のリリース以降 skills/ に変更が無いため、リリースしない"
           fi
-      - name: Push tag
-        if: steps.version.outputs.tag != ''
-        env:
-          TAG: ${{ steps.version.outputs.tag }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "${TAG}" -m "${TAG}"
-          git push origin "${TAG}"
       - name: Publish release
         if: steps.version.outputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
+        # タグは publish が Release と一緒に作る。先に push すると既存タグとして拒否される。
         run: gh skill publish --tag "${TAG}"

@@ -64,10 +64,11 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
   (`shuck`)・YAML(`ryl`)に加え、配布経路ごとの検査を行う。
   - `distribution-gh`: `gh skill publish --dry-run` でagentskills.io仕様を検証する
   - `distribution-npx`: `scripts/check-npx-skills.sh` で、`npx skills` で入るskillが `skills/` 配下と過不足なく一致するかを見る(`.claude/skills/` の混入を検出する)
-- `.github/workflows/release.yml`(`main` へのpushで `skills/**` が変わったとき、または手動): `scripts/next-version.sh` で版を決め、タグをpushし、`gh skill publish --tag` でReleaseを作る。版はPRタイトル(squash mergeのコミット件名)の種別で決まる。
+- `.github/workflows/release.yml`(`main` へのpushで `skills/**` が変わったとき、または手動。手動でも `main` 以外では動かない): `scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグとReleaseを作る(タグを先にpushすると `publish` が既存タグとして拒否する)。版はPRタイトル(squash mergeのコミット件名)の種別で決まる。
 
 `gh` は `.github/actions/setup-gh` で版を固定して入れる(ランナー同梱の `gh` は版が固定されないため)。
-`npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。どちらも上げるときはこの2か所を直す。
+版を上げるときは、同じ action の `sha256-*` もその版の `gh_<version>_checksums.txt` の値に直す。
+`npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。上の「npx skills CLIの構文」節を確かめた版と揃える。
 
 `.rumdl.toml` でMD013(行長制限)は無効化している(日本語の文章は1行1段落で書く方針のため)。
 

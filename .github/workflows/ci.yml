@@ -74,5 +74,5 @@ jobs:
           node-version: 22
       - name: Check skills installed by npx skills
         env:
-          SKILLS_CLI_VERSION: 1.7.4
+          SKILLS_CLI_VERSION: 1.8.1
         run: scripts/check-npx-skills.sh

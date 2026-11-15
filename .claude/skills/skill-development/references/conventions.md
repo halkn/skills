@@ -15,8 +15,10 @@
 ## リポジトリ専用skill(`.claude/skills/`)
 
 - `gh skill` は隠しディレクトリを既定でスキップするが、`npx skills` は `.claude/skills/` も探索する。
-- そのため `.claude/skills/<name>/SKILL.md` には次を付け、`npx skills` の配布対象から外す。
-  `INSTALL_INTERNAL_SKILLS=1` を付けたときだけ入る。
+- そのため `.claude/skills/<name>/SKILL.md` には次を付け、`npx skills` の一括インストール(`--skill '*'`)の対象から外す。
+  `INSTALL_INTERNAL_SKILLS=1` を付けたとき、または `--skill <name>` で名前を明示したときは入る(skills 1.8.1 の `src/add.ts` で確認)。
+  名前の明示までは防げないので、リポジトリ専用skillを端末に入れないのは利用者側の運用になる。
+- 値は YAML の真偽値 `true` にする。文字列の `"true"` を internal とみなさない版がある(1.7.4)。
 
   ```yaml
   metadata:
@@ -25,7 +27,9 @@
 
 - 付け忘れは `scripts/validate-skill-frontmatter.sh`(フック・CI)で検出する。
 
-## frontmatterの必須フィールド
+## frontmatterのフィールド
+
+必須は `name` と `description`。`license` は推奨。
 
 ```yaml
 ---
@@ -42,7 +46,7 @@ description: >
   曖昧な説明はトリガー漏れ・誤トリガーの原因になる。
   - 悪い例: `description: PDFを扱うためのskill`
   - 良い例: `description: ユーザーがPDFフォームに入力・記入したいときに使う`
-- `license`: 必須ではないが、`gh skill publish` が推奨項目として無いと警告する。
+- `license`: 必須ではないが、`gh skill publish` が推奨項目として無いと警告する(gh 2.103.2 で確認)。
   リポジトリの LICENSE に合わせて `MIT` を書く。
 - `allowed-tools` を指定する場合は文字列で書く(配列ではない)。
   `gh skill publish` はこの形式を検証する(PRのCIで `--dry-run` を実行する)。

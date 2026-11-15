@@ -22,7 +22,7 @@ Skill を作る・育てる・配布するときの手順そのものです。�
 | 段階 | 仕組み | 定義 |
 |------|--------|------|
 | PR | frontmatter・Markdown・shell・YAML の静的検査、`gh skill publish --dry-run`、`npx skills` で入るskillが `skills/` と一致するかの検査 | `.github/workflows/ci.yml` |
-| main へのマージ | `skills/**` が変わったときだけ、`scripts/next-version.sh` で版を決めてタグを push し、`gh skill publish --tag` で Release を作る | `.github/workflows/release.yml` |
+| main へのマージ | `skills/**` が変わったときだけ、`scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグと Release を作る | `.github/workflows/release.yml` |
 | 各端末 | `gh skill update --all` または `npx skills update --global --yes` を実行したときだけ反映される | README |
 
 - `gh skill` は版を指定しないと「最新のリリース → `main` の HEAD」、`npx skills` は `main` の HEAD を入れる。`skills/` の変更ごとにリリースするので、両者の内容は一致する。
@@ -101,7 +101,7 @@ gh skill preview halkn/skills "skills/<name>@skill/<name>"
 
 `main` へ向けて PR を作成し、`PULL_REQUEST_TEMPLATE.md` のチェックリストを記入する。
 PR タイトルは版の決定に使うので、`feat:`/`add:`/`fix:` などの種別を付ける（「版の決め方」参照）。
-CI（`.github/workflows/ci.yml`）の内容は CLAUDE.md の「CI」節にある。
+CI（`.github/workflows/ci.yml`）の内容は CLAUDE.md の「CI/CD」節にある。
 
 レビュアーは `SKILL.md` の差分を直接読む。これがそのままセキュリティ的な内容確認になる。
 確認できたら `main` に squash merge する。`skills/` が変わっていれば Release ワークフローが

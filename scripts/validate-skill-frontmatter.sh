@@ -35,14 +35,12 @@ for file in "$repo_root"/.claude/skills/*/SKILL.md; do
     status=2
     continue
   fi
-  internal=$(printf '%s' "$frontmatter" | yq eval '.metadata.internal // ""' -)
-  case "$internal" in
-    true | 1) ;;
-    *)
-      echo "$rel: リポジトリ専用skillには metadata.internal: true が必要です(npx skills の配布対象から外すため)" >&2
-      status=2
-      ;;
-  esac
+  # npx skills が internal とみなす値は版で違う(文字列 "true" / "1" を受けない版がある)ため、どの版でも効く YAML の真偽値だけを認める。
+  internal=$(printf '%s' "$frontmatter" | yq eval '.metadata.internal | (tag == "!!bool" and . == true)' -)
+  if [ "$internal" != "true" ]; then
+    echo "$rel: リポジトリ専用skillには metadata.internal: true(真偽値)が必要です(npx skills の配布対象から外すため)" >&2
+    status=2
+  fi
 done
 
 for file in "$repo_root"/skills/*/SKILL.md; do
