@@ -8,7 +8,7 @@
 - ディレクトリ名は `skills/<skill-name>/` の形。`<skill-name>` は小文字・数字・
   ハイフンのみ(kebab-case)。例: `pdf-fill-form`, `skill-development`。
 - frontmatterの `name` は、ディレクトリ名と**完全一致**させる。この一致は
-  `scripts/validate-skill-frontmatter.sh`（CIとローカルフックで共有）で検証される。
+  `gh skill publish --dry-run`（CIの `distribution-gh` とローカルフック `scripts/check-skills-hook.sh`）で検証される。
 - `gh skill install owner/repo skills/<name>` はこのディレクトリ構造を前提に
   スキルを解決するため、不一致があるとインストールに失敗する。
 
@@ -25,7 +25,7 @@
     internal: true
   ```
 
-- 付け忘れは `scripts/validate-skill-frontmatter.sh`(フック・CI)で検出する。
+- 付け忘れと真偽値でない値は `scripts/validate-internal-skills.py`(フック・CI の `frontmatter` ジョブ)で、混入は CI の `distribution-npx`(`scripts/check-npx-skills.sh`)で検出する。
 
 ## frontmatterのフィールド
 

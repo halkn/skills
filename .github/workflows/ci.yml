@@ -11,18 +11,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  skills:
+  # gh skill は隠しディレクトリを見ないため、リポジトリ専用skill(.claude/skills/)の frontmatter はここで見る。
+  # skills/ の frontmatter は distribution-gh が見る。
+  frontmatter:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Install yq
-        run: |
-          sudo curl -sSL -o /usr/local/bin/yq \
-            https://github.com/mikefarah/yq/releases/download/v4.53.3/yq_linux_amd64
-          sudo chmod +x /usr/local/bin/yq
-          yq --version
-      - name: Validate SKILL.md frontmatter
-        run: scripts/validate-skill-frontmatter.sh
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: 0.13.8
+          enable-cache: false
+      - name: Validate .claude/skills/*/SKILL.md frontmatter
+        run: uv run scripts/validate-internal-skills.py
 
   rumdl:
     runs-on: ubuntu-latest
@@ -30,6 +30,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: rvben/rumdl@v0
         with:
+          version: 0.3.4
           report-type: annotations
 
   shuck:
@@ -51,16 +52,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.3
+      # action のタグが ryl の版を固定する(version の既定値がタグと同じ版)。
+      - uses: owenlamont/ryl-action@v0.29.0
         with:
-          version: 0.13.8
-          enable-cache: false
+          install-only: true
       - name: Lint YAML
-        run: uvx "ryl==0.29.0" check --format github .
+        run: ryl check --format github .
       - name: Check YAML formatting
-        run: uvx "ryl==0.29.0" format --check --markdown --output-format github .
+        run: ryl format --check --markdown --output-format github .
 
   # 配布経路ごとに、このリポジトリから入るskillを検証する。
+  # distribution-gh は skills/*/SKILL.md の frontmatter(name・description・name とディレクトリ名の一致)、
+  # distribution-npx は固定した版の npx skills で .claude/skills/ が混入しないことを検出する。
   distribution-gh:
     runs-on: ubuntu-latest
     steps:
