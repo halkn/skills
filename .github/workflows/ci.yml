@@ -11,6 +11,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # gh skill は隠しディレクトリを見ないため、リポジトリ専用skill(.claude/skills/)の frontmatter はここで見る。
+  # skills/ の frontmatter は distribution-gh が見る。
+  frontmatter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          version: 0.13.8
+          enable-cache: false
+      - name: Validate .claude/skills/*/SKILL.md frontmatter
+        run: uv run scripts/validate-internal-skills.py
+
   rumdl:
     runs-on: ubuntu-latest
     steps:
@@ -50,7 +63,7 @@ jobs:
 
   # 配布経路ごとに、このリポジトリから入るskillを検証する。
   # distribution-gh は skills/*/SKILL.md の frontmatter(name・description・name とディレクトリ名の一致)、
-  # distribution-npx は .claude/skills/ の混入(metadata.internal の付け忘れ)を検出する。
+  # distribution-npx は固定した版の npx skills で .claude/skills/ が混入しないことを検出する。
   distribution-gh:
     runs-on: ubuntu-latest
     steps:

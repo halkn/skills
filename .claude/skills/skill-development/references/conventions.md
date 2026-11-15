@@ -25,7 +25,7 @@
     internal: true
   ```
 
-- 付け忘れは CI の `distribution-npx`(`scripts/check-npx-skills.sh`)で検出する。
+- 付け忘れと真偽値でない値は `scripts/validate-internal-skills.py`(フック・CI の `frontmatter` ジョブ)で、混入は CI の `distribution-npx`(`scripts/check-npx-skills.sh`)で検出する。
 
 ## frontmatterのフィールド
 
