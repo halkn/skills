@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # uses: をコミットSHAで固定した action を更新する。SHA の後ろの `# vX.Y.Z` コメントも一緒に書き換わる。
+  # ツールの版を action の入力で固定しているもの(rumdl の version、shuck-version など)は対象外で、手で上げる。
+  - package-ecosystem: github-actions
+    # `/` だけでは .github/workflows とリポジトリ直下の action.yml しか見ないため、composite action を足す。
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+    # 出たばかりの版は乗っ取られたタグである可能性があるため、公開から7日待ってから取り込む。
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: ci
