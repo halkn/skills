@@ -66,6 +66,36 @@
         "$(cat <<EOF) で本文を渡していない",
         "作成後に gh pr view で本文を読み返している"
       ]
+    },
+    {
+      "id": 6,
+      "name": "azure-devops-pr",
+      "prompt": "origin は https://fabrikam@dev.azure.com/fabrikam/Web/_git/web。変更をコミットして push して、work item 1234 を紐付けて PR を作って。",
+      "expected_output": "push 先が dev.azure.com なので gh ではなく references/azure-devops.md の手順で進める。既定ブランチの PR テンプレートを .azuredevops/・.vsts/・docs/・ルートから探し、埋めた本文をファイルに書いて az repos pr create の --description @<file> で渡し、--work-items 1234 で紐付ける。作成後に az repos pr show で本文を読み返し、ID と URL を報告する。マージはしない。",
+      "files": [],
+      "expectations": [
+        "リモートの URL を確認し、gh ではなく az repos で PR を作っている(ユーザーへの確認で止まっていない)",
+        "PR テンプレートの確認で、既定ブランチの .azuredevops/・.vsts/・docs/・ルートを対象にしている",
+        "本文をファイルに書き、az repos pr create の --description に @<file> の形で渡している",
+        "work item 1234 を --work-items(または az repos pr work-item add)で紐付けている。コミットメッセージに #番号を書くなら、紐付ける work item の ID(1234)だけにしている",
+        "作成時に --auto-complete・--delete-source-branch・--bypass-policy を付けていない",
+        "作成後に az repos pr show で本文を読み返し、@<file> の文字列のままになっていないことを確かめている",
+        "依頼に無いマージ(--status completed)をしていない"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "azure-devops-merge",
+      "prompt": "origin は Azure DevOps(dev.azure.com)。PR 42 をマージして。",
+      "expected_output": "az repos pr policy list --id 42 で blocking なポリシーの評価を確認し、completionOptions に保存された mergeStrategy を確かめてから、az repos pr update --id 42 --status completed に --squash・--delete-source-branch false・--transition-work-items false を明示して完了させる。リポジトリに方針が無ければ --squash false(通常の merge)。完了後に status が completed になったことを確かめる。",
+      "files": [],
+      "expectations": [
+        "マージ前に az repos pr policy list でブランチポリシーの評価を確認している",
+        "マージ方式を --squash で明示し、リポジトリに方針が無ければ --squash false にしている",
+        "--delete-source-branch と --transition-work-items を false で明示している(PR に保存された完了オプションに頼らない)",
+        "--bypass-policy と --auto-complete を使っていない",
+        "マージ後に az repos pr show で status が completed になったことを確かめている"
+      ]
     }
   ]
 }
