@@ -24,7 +24,7 @@ description: ブランチ作成から commit・push・PR 作成・マージま�
 - ブランチ切替は `git switch`、ファイル復元は `git restore` を使う。`git checkout` は使わない
   - 理由: `git checkout` は「ブランチ切替」と「ファイル破棄」という危険度の異なる 2 つの機能を 1 コマンドに持つ。引数を 1 つ間違えるだけで未コミット変更が消える。`switch` / `restore` は用途が分かれているため、その事故が構造的に起きない
 - 対話的フラグ（`git rebase -i`、`git add -i` 等）はこの環境では動かない。非対話の等価な手段に置き換える
-- PR・issue・CI の操作は、ホストの CLI（GitHub は `gh`、Azure DevOps は `az repos`）を使う。ブラウザや Web UI の手順を案内しない
+- PR・issue・CI の操作は、ホストの CLI（GitHub は `gh`、Azure DevOps は `az`。PR は `az repos`、パイプラインは `az pipelines`、work item は `az boards`）を使う。ブラウザや Web UI の手順を案内しない
 - git のネットワーク系（`push` / `fetch` / `clone` / `ls-remote`）と `gh`・`az` は、作業ディレクトリで、何も前置きせず 1 コマンドだけで実行する。例えば次の形にしない。ここに無い形でも、環境の規則（グローバル設定・hook）に拒否されたらその規則に従う
   - `cd` を前置きする。パイプ・`&&`・`;`・`$(...)` で他のコマンドとつなぐ
   - ファイルへリダイレクトする（`2>/dev/null` を含む）。fd を複製するだけの `2>&1` は使える
@@ -74,7 +74,7 @@ push 先の URL のホスト名で、使う reference を決める。
 | `dev.azure.com`・`ssh.dev.azure.com`・`*.visualstudio.com` | Azure DevOps（Azure Repos） | `references/azure-devops.md`（`az repos`） |
 | それ以外（GitLab・Azure DevOps Server を含む社内の自前ホスティングなど） | — | 推測で CLI を叩かず、ユーザーに確認する |
 
-表に無いホストで確認を挟むのは、誤ったホストの CLI は失敗するだけで済むが、記法を誤ったコミットは履歴に残るため。Azure DevOps Server（オンプレミス）は `az repos` に対応していないので、3 行目として扱う。
+表に無いホストで確認を挟むのは、誤ったホストの CLI は失敗するだけで済むが、記法を誤ったコミットは履歴に残るため。Azure DevOps Server（オンプレミス）は `az repos` に対応していない（learn.microsoft.com の「Complete a pull request」、2026-11 時点）ので、3 行目として扱う。
 
 同一セッション内でも、リポジトリを跨いだら確認をやり直す。
 
@@ -167,7 +167,7 @@ issue・work item の参照記法はホストで違う。ホストの reference 
 
 マージは PR 作成の続きではない。「PR を作って」に続けて勝手にマージしない。明示的に依頼されたときだけ実行する。
 
-1. **対象の PR を特定する** — 依頼で PR 番号かブランチが名指しされていなければ、マージせずに確認する。`gh pr merge` は引数を省くと現在のブランチの PR を選ぶので、推定で実行しない
+1. **対象の PR を特定する** — 依頼で PR 番号（Azure DevOps では PR の ID）かブランチが名指しされていなければ、マージせずに確認する。`gh pr merge` は引数を省くと現在のブランチの PR を選ぶ。PR の一覧（`gh pr list`・`az repos pr list`）から推定して選ぶのも同じで、推定で実行しない
 1. **CI の状態を確認する** — 失敗しているチェック（Azure DevOps ではブランチポリシーの評価）があればマージせず報告する。ブランチ保護で必須チェックが設定されていれば CLI 側も弾くが、弾かれない設定のリポジトリもある
 1. **マージ方式を決める** — 既定は履歴を保持する通常の merge。squash / rebase はリポジトリの方針として指定されているときに使う
 1. **マージする** — コマンドはホストの reference を見る

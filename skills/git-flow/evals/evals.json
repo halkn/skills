@@ -77,7 +77,7 @@
         "リモートの URL を確認し、gh ではなく az repos で PR を作っている(ユーザーへの確認で止まっていない)",
         "PR テンプレートの確認で、既定ブランチの .azuredevops/・.vsts/・docs/・ルートを対象にしている",
         "本文をファイルに書き、az repos pr create の --description に @<file> の形で渡している",
-        "work item 1234 を --work-items(または az repos pr work-item add)で紐付けている。コミットメッセージに GitHub の issue のつもりの #番号を書いていない",
+        "work item 1234 を --work-items(または az repos pr work-item add)で紐付けている。コミットメッセージに #番号を書くなら、紐付ける work item の ID(1234)だけにしている",
         "作成時に --auto-complete・--delete-source-branch・--bypass-policy を付けていない",
         "作成後に az repos pr show で本文を読み返し、@<file> の文字列のままになっていないことを確かめている",
         "依頼に無いマージ(--status completed)をしていない"
