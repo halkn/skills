@@ -77,7 +77,7 @@ uv は `astral-sh/setup-uv` の `version` で、`validate-internal-skills.py` �
 タグはあとから別のコミットに付け替えられるため、タグ参照では action 本体の改ざんを防げない。
 SHA の後ろには、そのコミットを指す完全な版のタグを `# vX.Y.Z` の形でコメントに残す(メジャータグ `v1` などは書かない)。
 SHA は `git ls-remote --tags https://github.com/<owner>/<repo>.git` で、注釈付きタグなら `^{}` の行(タグが指すコミット)の値を使う。
-更新は `.github/dependabot.yml`(`github-actions` エコシステム、週1回、全 action を1つのPRにまとめる)に任せる。Dependabot は SHA とタグのコメントを一緒に書き換える。公開から7日経っていない版は取り込まない(`cooldown`)。
+更新は `.github/dependabot.yml`(`github-actions` エコシステム、週1回、全 action を1つのPRにまとめる)に任せる。Dependabot は SHA とタグのコメントを一緒に書き換える。公開から7日経っていない版は取り込まない(`cooldown`。version updates にだけ効き、security updates には効かない)。
 Dependabot が上げるのは action 本体だけで、action の入力で固定したツールの版(`rvben/rumdl` の `version`、`ewhauser/shuck-action` の `shuck-version`、`astral-sh/setup-uv` の `version`)は変わらないので、必要なら手で上げる。
 例外として `owenlamont/ryl-action` は `version` を指定せず action の版で ryl の版が決まるため、action の更新で ryl の版も上がる。
 
