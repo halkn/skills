@@ -41,7 +41,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 
 ## npx skills CLIの構文(要注意)
 
-`vercel-labs/skills` のREADME・docs/commands.md(2026-11時点、npm最新は1.8.1)で確認した内容。
+`vercel-labs/skills` 1.8.1 のREADME・docs/commands.md で確認した内容。
 
 - インストール先の既定はプロジェクト(`./.claude/skills/`)。ユーザースコープは `--global`(`~/.claude/skills/`)
 - skillの指定は `--skill <name>`(全部は `--skill '*'`)、エージェントは `--agent claude-code`
