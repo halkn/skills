@@ -24,7 +24,7 @@ allowed-tools: >
 - transcript のパス: 作業ディレクトリの中にあって読めるなら、コピーせずにそのまま下の `digest.sh` に渡す。読めなければ `recent <N>` と同じくコピーしてもらう。
 - `recent <N>`: 直近 N 件の過去のセッションを振り返る。transcript は `~/.claude/projects/<project>/<session>.jsonl` にあり、作業ディレクトリの外で読めないことが多い。置き場にコピーしてもらう。
 
-置き場は、セッションの環境の案内（system prompt の Environment）に scratchpad があれば `<scratchpad>/session-retrospective/`、無ければ作業木のルートの `.scratch/session-retrospective/` にする。`.scratch/` が ignore されていなければ `git rev-parse --git-path info/exclude` が示すファイルに足す。scratchpad のパスは環境の案内から取り、環境変数から組み立てない。
+置き場は、セッションに scratchpad があっても作業木のルート（`git rev-parse --show-toplevel`）の `.scratch/session-retrospective/<日時>/` にする。下の `digest.sh` は Bash のコマンドに置き場のパスを書いて実行する。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない（Claude Code v2.1.326 で確認）。`.scratch/` はセッションの終わりに消えないので、実行ごとに `<日時>`（`date +%Y%m%d-%H%M%S`）で分け、前の実行で残ったコピーを今回の要約に混ぜない。`.scratch/` が ignore されていなければ、コピーを頼む前に `git rev-parse --git-path info/exclude` が示すファイルに `/.scratch/` を足す。
 
 ユーザーに、`!` を付けて次を実行するよう頼む（`<dir>` は置き場の絶対パス、`<N>` は件数に置き換えて示す）。
 
@@ -145,4 +145,4 @@ bash ${CLAUDE_SKILL_DIR}/scripts/digest.sh <dir>/*.jsonl > <dir>/digest.md
 
 ### 7. 片付ける
 
-transcript のコピーと `digest.md` を消す。transcript には読んだファイルの中身やコマンドの出力がそのまま入っていて、秘密情報が混ざり得る。同じ理由で、transcript の中身を外部のサービスに送らない。
+transcript のコピーと `digest.md` を、置き場の `<日時>` のディレクトリごと消す。transcript には読んだファイルの中身やコマンドの出力がそのまま入っていて、秘密情報が混ざり得る。同じ理由で、transcript の中身を外部のサービスに送らない。
