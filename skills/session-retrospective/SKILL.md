@@ -24,18 +24,18 @@ allowed-tools: >
 - transcript のパス: 作業ディレクトリの中にあって読めるなら、コピーせずにそのまま下の `digest.sh` に渡す。読めなければ `recent <N>` と同じくコピーしてもらう。
 - `recent <N>`: 直近 N 件の過去のセッションを振り返る。transcript は `~/.claude/projects/<project>/<session>.jsonl` にあり、作業ディレクトリの外で読めないことが多い。置き場にコピーしてもらう。
 
-置き場は、セッションの環境の案内（system prompt の Environment）に scratchpad があれば `<scratchpad>/session-retrospective/`、無ければ作業木のルートの `.scratch/session-retrospective/` にする。`.scratch/` が ignore されていなければ `git rev-parse --git-path info/exclude` が示すファイルに足す。scratchpad のパスは環境の案内から取り、環境変数から組み立てない。
+置き場は、セッションに scratchpad があっても作業木のルート（`git rev-parse --show-toplevel`）の `.scratch/session-retrospective/` にする。下の `digest.sh` は Bash のコマンドに置き場のパスを書いて実行する。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない。`.scratch/` が ignore されていなければ、コピーを頼む前に `git rev-parse --git-path info/exclude` が示すファイルに `/.scratch/` を足す。
 
-ユーザーに、`!` を付けて次を実行するよう頼む（`<dir>` は置き場の絶対パス、`<N>` は件数に置き換えて示す）。
+ユーザーに、`!` を付けて次を実行するよう頼む（`<root>` は作業木のルートの絶対パス、`<N>` は件数に置き換えて示す）。
 
 ```bash
-! mkdir -p <dir> && ls -t ~/.claude/projects/*/*.jsonl | head -<N> | xargs -I{} cp {} <dir>/
+! mkdir -p <root>/.scratch/session-retrospective && ls -t ~/.claude/projects/*/*.jsonl | head -<N> | xargs -I{} cp {} <root>/.scratch/session-retrospective/
 ```
 
 コピーできたら要約を作り、`digest.md` を読む。
 
 ```bash
-bash ${CLAUDE_SKILL_DIR}/scripts/digest.sh <dir>/*.jsonl > <dir>/digest.md
+bash ${CLAUDE_SKILL_DIR}/scripts/digest.sh <root>/.scratch/session-retrospective/*.jsonl > <root>/.scratch/session-retrospective/digest.md
 ```
 
 `digest.md` には、セッションの一覧・Stops（hook・auto mode classifier・permission rule に止められた呼び出しと、ユーザーが拒否・中断した呼び出し）・Tool errors（メッセージごとの回数と例）・ユーザーのプロンプトが入る。`digest.sh` が「レコードが見つからない」で止まったら、transcript の形式が変わっている。そのことを報告して止める（スクリプトを直すのが正しい対処で、その場の jq で補うと次回また同じ組み直しになる）。
