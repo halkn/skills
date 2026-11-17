@@ -48,7 +48,7 @@ Agent Skills 仕様に従い、各 Skill は次の構造を取ります。
 ```text
 skills/<skill-name>/
 ├── SKILL.md          # 必須。frontmatter (name, description) + 本体
-├── scripts/          # 任意。実行可能なヘルパースクリプト
+├── scripts/          # 任意。ヘルパースクリプト(呼び出しはインタプリタ経由)
 ├── references/       # 任意。詳細情報（プログレッシブディスクロージャ用）
 └── assets/           # 任意。テンプレート・画像などの静的ファイル
 ```
@@ -58,6 +58,7 @@ skills/<skill-name>/
   `references/` 以下のファイルに逃がし、`SKILL.md` からリンクする
   （プログレッシブディスクロージャ）。
 - 命名規則やfrontmatterの詳細は [references/conventions.md](references/conventions.md) を参照。
+- `scripts/` のスクリプトは `bash ${CLAUDE_SKILL_DIR}/scripts/foo.sh` や `python3 ${CLAUDE_SKILL_DIR}/scripts/foo.py` のようにインタプリタ経由で呼ぶ(`allowed-tools` の `Bash(...)` も同じ形にする)。`gh skill install` は実行ビットを保持せず、全ファイルを `0644` で書き出すため、直接実行すると Permission denied になる。
 
 ## 開発フロー
 
@@ -134,6 +135,7 @@ npx skills update --global --yes
 - [ ] frontmatterの`name`がディレクトリ名と一致している
 - [ ] `description`に具体的なトリガーフレーズが含まれる
 - [ ] ローカルで動作確認済み(symlink・`scripts/check-npx-skills.sh`・`gh skill preview` のいずれか)
+- [ ] `scripts/` のスクリプトをインタプリタ経由(`bash`/`python3`)で呼んでいる
 - [ ] `SKILL.md`が行数目安(約500行)以内、または詳細を`references/`に退避済み
 - [ ] 秘密情報や難読化されたスクリプトが含まれていない(previewしても安全)
 - [ ] PRタイトルに種別(`feat:`/`add:`/`fix:` など)が付いている

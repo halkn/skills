@@ -9,7 +9,7 @@ description: >
 disable-model-invocation: true
 argument-hint: '[recent <N> | <transcript.jsonl>...]'
 allowed-tools: >
-  Bash(${CLAUDE_SKILL_DIR}/scripts/digest.sh *)
+  Bash(bash ${CLAUDE_SKILL_DIR}/scripts/digest.sh *)
 ---
 
 # session-retrospective
@@ -35,7 +35,7 @@ allowed-tools: >
 コピーできたら要約を作り、`digest.md` を読む。
 
 ```bash
-${CLAUDE_SKILL_DIR}/scripts/digest.sh <dir>/*.jsonl > <dir>/digest.md
+bash ${CLAUDE_SKILL_DIR}/scripts/digest.sh <dir>/*.jsonl > <dir>/digest.md
 ```
 
 `digest.md` には、セッションの一覧・Stops（hook・auto mode classifier・permission rule に止められた呼び出しと、ユーザーが拒否・中断した呼び出し）・Tool errors（メッセージごとの回数と例）・ユーザーのプロンプトが入る。`digest.sh` が「レコードが見つからない」で止まったら、transcript の形式が変わっている。そのことを報告して止める（スクリプトを直すのが正しい対処で、その場の jq で補うと次回また同じ組み直しになる）。
