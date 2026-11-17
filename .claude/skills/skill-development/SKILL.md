@@ -78,11 +78,15 @@ git switch -c skill/<name>
 編集と動作確認をすばやく繰り返す。
 
 ```bash
+# 配布済みの skill は ~/.claude/skills/<name> が実ディレクトリなので、先に skills/ の外へ退避する。
+# 退避しないと ln -s はそのディレクトリの中にリンクを作り、インストール済みの版が読み込まれたままになる。
+[ -d ~/.claude/skills/<name> ] && [ ! -L ~/.claude/skills/<name> ] && mv ~/.claude/skills/<name> ~/.claude/skill-backup-<name>
 ln -s "$(pwd)/skills/<name>" ~/.claude/skills/<name>
 ```
 
 編集 → Claude Code の新規セッションでトリガー確認、を繰り返す。確認が済んだら
-リンクを外す（`rm ~/.claude/skills/<name>`）。
+リンクを外し（`rm ~/.claude/skills/<name>`）、退避したものがあれば
+`mv ~/.claude/skill-backup-<name> ~/.claude/skills/<name>` で戻す。
 
 sandbox で `~/.claude/skills` への書き込みを禁じている環境では、Claude はリンクの作成・
 削除を実行できない。コマンドを提示し、ユーザーに `!` 付きで実行してもらう。
