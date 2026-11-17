@@ -34,7 +34,7 @@ PR モードに入る前に `git remote -v` でホストを確認する。`githu
 作業ディレクトリを決めて、以降の中間ファイルをそこに置く。
 
 ```bash
-root=$(git rev-parse --show-toplevel)
+root=$(git rev-parse --show-toplevel) || exit 1
 work_root="$root/.scratch/review-report"
 if ! git check-ignore -q "$work_root/"; then
   printf '%s\n' '/.scratch/' >>"$(git rev-parse --git-path info/exclude)"
@@ -47,7 +47,9 @@ done
 echo "work=$work"
 ```
 
-置き場は、セッションに scratchpad があっても作業木のルートの中の `.scratch/review-report/` にする。以降の手順は Bash のコマンドに `$work` のパスを書いて読み書きする。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
+置き場は、セッションに scratchpad があっても作業木のルートの中の `.scratch/review-report/` にする。以降の手順は Bash のコマンドに `$work` のパスを書いて読み書きする。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない（Claude Code v2.1.326 で確認）。
+
+シェル変数は Bash の呼び出しをまたいで残らない。以降の手順の `$work` は、ここで出力した `work=` の絶対パスに置き換えて書く。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
 
 - `.scratch/` が ignore されていなければ、`info/exclude` に足してから書く。ローカルだけの設定なので追跡されず、レポートが commit に混ざらない
 - `.scratch/review-report/` はこの skill の置き場で、今回の分を含めて新しい 10 件だけ残し、それより古いものは消す（`.scratch/` はセッションの終わりに消えず、`diff.patch` にはレビュー対象のソースがそのまま入るため）。`.scratch/` の他のファイルには触れない。手で消してもよい
