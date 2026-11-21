@@ -10,7 +10,7 @@
   --panel: #fafafa; --accent: #2563eb; --sel: #e8f0fe;
   --add-bg: #e6ffec; --add-fg: #0a5c28; --del-bg: #ffebe9; --del-fg: #82071e;
   --hit: #fff8c5; --high: #991b1b; --medium: #b45309; --low: #4b5563;
-  --block: #b91c1c; --ok: #15803d; --human: #6d28d9;
+  --block: #b91c1c; --hold: #b45309; --ok: #15803d; --human: #6d28d9;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -18,108 +18,123 @@
     --panel: #1c1f26; --accent: #7aa2f7; --sel: #23304a;
     --add-bg: #12261c; --add-fg: #7ee2a8; --del-bg: #2d1618; --del-fg: #ff9492;
     --hit: #3a3413; --high: #f87171; --medium: #fbbf24; --low: #9ca3af;
-    --block: #f87171; --ok: #4ade80; --human: #c4b5fd;
+    --block: #f87171; --hold: #fbbf24; --ok: #4ade80; --human: #c4b5fd;
   }
 }
 * { box-sizing: border-box; }
-/* タブの切替は hidden 属性で行う。author origin の display 指定（main の grid など）は
-   UA スタイルの [hidden] より強いので、!important で押さえないと隠れない */
+/* 表示の切替は hidden 属性で行う。author origin の display 指定は UA スタイルの
+   [hidden] より強いので、!important で押さえないと隠れない */
 [hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--fg);
   font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
 }
 code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-button { font: inherit; color: inherit; }
+button, input, textarea { font: inherit; color: inherit; }
 
 header {
-  padding: 12px 20px 0; border-bottom: 1px solid var(--line); background: var(--panel);
+  position: sticky; top: 0; z-index: 2;
+  padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--panel);
 }
-header h1 { font-size: 15px; margin: 0 0 2px; font-weight: 600; }
+header h1 { font-size: 15px; margin: 0; font-weight: 600; }
 header .sub { font-size: 12px; color: var(--muted); }
 header a { color: var(--accent); }
-.tabs { display: flex; gap: 4px; margin-top: 10px; }
-.tab {
-  border: 1px solid transparent; border-bottom: 0; background: none; cursor: pointer;
-  padding: 6px 14px; border-radius: 6px 6px 0 0; color: var(--muted);
-}
-.tab[aria-selected="true"] {
-  background: var(--bg); border-color: var(--line); color: var(--fg);
-  margin-bottom: -1px; padding-bottom: 7px;
-}
-
-#summary { padding: 24px; max-width: 900px; }
+.bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 .verdict {
-  border: 1px solid var(--line); border-left: 4px solid var(--block);
-  border-radius: 6px; padding: 16px 20px; background: var(--panel);
+  font-weight: 700; padding: 2px 10px; border-radius: 4px;
+  border: 1px solid currentColor; color: var(--block);
 }
-.verdict.pass { border-left-color: var(--ok); }
-.verdict h2 { margin: 0; font-size: 18px; color: var(--block); }
-.verdict.pass h2 { color: var(--ok); }
-.verdict .why { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
-.verdict .note { margin: 12px 0 0; }
-
-table.matrix { border-collapse: collapse; margin-top: 24px; min-width: 420px; }
-table.matrix th, table.matrix td { border: 1px solid var(--line); padding: 6px 14px; text-align: right; }
-table.matrix th { background: var(--panel); font-weight: 600; }
-table.matrix th:first-child, table.matrix td:first-child { text-align: left; }
-table.matrix tr.total td, table.matrix tr.total th { font-weight: 600; }
-table.matrix td.zero { color: var(--muted); }
-
-#summary h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 8px; }
-ul.picks { margin: 0; padding-left: 20px; }
-ul.picks li { margin-bottom: 6px; }
-ul.picks a { color: var(--accent); cursor: pointer; text-decoration: underline; }
-.hint { color: var(--muted); font-size: 13px; }
-.actions { margin-top: 24px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.actions button {
+.verdict.hold { color: var(--hold); }
+.verdict.pass { color: var(--ok); }
+.counts { color: var(--muted); font-size: 13px; }
+.counts b { color: var(--fg); font-weight: 600; }
+.bar .spacer { flex: 1; }
+.bar button {
   border: 1px solid var(--line); background: var(--bg); border-radius: 6px;
-  padding: 6px 14px; cursor: pointer;
+  padding: 4px 12px; cursor: pointer;
 }
-.actions button:hover { background: var(--panel); }
-.actions .said { color: var(--ok); font-size: 13px; }
+.bar button.primary { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.bar button:hover { background: var(--sel); }
+.said { color: var(--ok); font-size: 13px; }
+.said.failed { color: var(--block); }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.note { margin: 6px 0 0; font-size: 13px; }
+#instruction {
+  width: 100%; height: 120px; margin-top: 8px;
+  font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+}
 
-main { display: grid; grid-template-columns: minmax(300px, 32%) 1fr; height: calc(100vh - 96px); }
-@media (max-width: 720px) { main { grid-template-columns: 1fr; height: auto; } }
+main { padding: 12px 20px 40px; max-width: 1200px; }
+.keys { color: var(--muted); font-size: 12px; margin: 0 0 8px; }
+.keys kbd {
+  font-family: ui-monospace, Menlo, monospace; font-size: 11px;
+  border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; background: var(--panel);
+}
 
-#list { overflow-y: auto; border-right: 1px solid var(--line); }
-#list h2 {
-  position: sticky; top: 0; margin: 0; padding: 8px 16px; background: var(--panel);
-  border-bottom: 1px solid var(--line); font-size: 11px; letter-spacing: .06em;
-  text-transform: uppercase; color: var(--muted);
+table.findings { width: 100%; border-collapse: collapse; }
+table.findings > thead th {
+  text-align: left; font-size: 11px; letter-spacing: .06em; color: var(--muted);
+  border-bottom: 1px solid var(--line); padding: 4px 8px; font-weight: 600;
 }
-.item {
-  display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line);
-  background: none; padding: 10px 16px; cursor: pointer;
+tr.row > td { padding: 8px; border-top: 1px solid var(--line); vertical-align: top; }
+tr.row { cursor: pointer; }
+tr.row:hover > td { background: var(--panel); }
+tr.row.current > td { background: var(--sel); }
+tr.row > th.num {
+  width: 1%; white-space: nowrap; font-weight: 600; text-align: left;
+  padding: 8px; border-top: 1px solid var(--line); vertical-align: top;
 }
-.item:hover { background: var(--panel); }
-.item[aria-current="true"] { background: var(--sel); }
-.item .loc { font-size: 12px; color: var(--muted); word-break: break-all; }
-.item .txt { margin-top: 2px; }
-.item.done .txt { text-decoration: line-through; color: var(--muted); }
+tr.row:hover > th { background: var(--panel); }
+tr.row.current > th { background: var(--sel); box-shadow: inset 3px 0 0 var(--accent); }
+td.sev { width: 1%; white-space: nowrap; }
+td.loc { width: 1%; white-space: nowrap; color: var(--muted); font-size: 12px; }
+td.what .txt { font-weight: 500; }
+tr.row.settled td.what .txt { color: var(--muted); }
+td.toggle { width: 1%; color: var(--muted); }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; white-space: nowrap; }
+.seg button {
+  border: 0; border-left: 1px solid var(--line); background: var(--bg);
+  padding: 2px 8px; cursor: pointer; font-size: 12px; color: var(--muted);
+}
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { color: #fff; font-weight: 600; }
+.seg button.d-fix-now[aria-pressed="true"] { background: var(--block); }
+.seg button.d-ask[aria-pressed="true"] { background: var(--hold); }
+.seg button.d-issue[aria-pressed="true"] { background: var(--accent); }
+.seg button.d-wont-fix[aria-pressed="true"] { background: var(--low); }
+
 .badge {
   display: inline-block; padding: 0 6px; border-radius: 10px; font-size: 11px;
-  border: 1px solid currentColor; margin-right: 6px; vertical-align: 1px;
+  border: 1px solid currentColor; vertical-align: 1px;
 }
 .s-HIGH { color: var(--high); }
 .s-MEDIUM { color: var(--medium); }
 .s-LOW { color: var(--low); }
 .c-human { color: var(--human); }
 
-#detail { overflow-y: auto; padding: 20px 24px; }
-#detail h2 { font-size: 16px; margin: 0 0 4px; }
-#detail .loc { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
-#detail dt { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 14px; }
-#detail dd { margin: 4px 0 0; }
-.empty { color: var(--muted); padding: 40px 0; text-align: center; }
+.sub-line { margin-top: 4px; font-size: 13px; color: var(--muted); }
+.sub-line input {
+  width: 100%; max-width: 520px; margin-top: 2px; padding: 2px 6px;
+  border: 1px solid var(--line); border-radius: 4px; background: var(--bg);
+}
+.changed { color: var(--hold); font-size: 12px; }
+.question { color: var(--hold); }
 
-.triage { margin-top: 18px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
-.triage legend { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 4px; }
-.triage label { margin-right: 16px; cursor: pointer; }
-.triage .why { margin-top: 8px; color: var(--muted); font-size: 13px; }
+tr.detail > td { padding: 4px 8px 16px 40px; background: var(--panel); }
+tr.detail dl { margin: 0; }
+tr.detail dt { font-size: 11px; letter-spacing: .06em; color: var(--muted); margin-top: 10px; }
+tr.detail dd { margin: 2px 0 0; }
+.empty { color: var(--muted); padding: 12px 0; }
 
-.hunk { margin-top: 18px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-.hunk .section { padding: 6px 12px; background: var(--panel); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+.hunk { margin-top: 12px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--bg); }
+.hunk .section { padding: 4px 12px; background: var(--panel); border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 table.diff { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 table.diff td { padding: 0 8px; white-space: pre-wrap; word-break: break-all; vertical-align: top; }
 table.diff td.n { width: 1%; text-align: right; color: var(--muted); user-select: none; white-space: nowrap; }
@@ -128,24 +143,45 @@ tr.del td { background: var(--del-bg); color: var(--del-fg); }
 tr.hit td { background: var(--hit); }
 tr.hit td.n { font-weight: 700; }
 
-#export { width: 100%; height: 260px; margin-top: 12px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+h2.section-title { font-size: 12px; letter-spacing: .06em; color: var(--muted); margin: 28px 0 8px; }
+table.reqs { border-collapse: collapse; width: 100%; }
+table.reqs th, table.reqs td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+table.reqs th { background: var(--panel); font-weight: 600; }
+table.reqs td.r-missing { color: var(--block); font-weight: 600; }
+table.reqs td.r-unclear { color: var(--hold); font-weight: 600; }
+table.reqs td.r-met { color: var(--ok); }
 </style>
 </head>
 <body>
 <header>
   <h1 id="title"></h1>
   <div class="sub"><span id="sub"></span> <a id="target-link" hidden></a></div>
-  <div class="tabs" role="tablist">
-    <button class="tab" id="tab-summary" role="tab" type="button">サマリー</button>
-    <button class="tab" id="tab-findings" role="tab" type="button">指摘</button>
+  <div class="bar">
+    <span id="verdict" class="verdict"></span>
+    <span id="counts" class="counts"></span>
+    <span class="spacer"></span>
+    <!-- 通知の live region。hidden で出し入れすると支援技術から見えなくなるので、常に置いて文言だけ替える -->
+    <span id="said" class="said" role="status"></span>
+    <button type="button" id="reset" hidden></button>
+    <button type="button" id="copy" class="primary">指示文をコピー</button>
   </div>
+  <p id="note" class="note" hidden></p>
+  <textarea id="instruction" readonly hidden></textarea>
 </header>
 
-<section id="summary" role="tabpanel"></section>
-
-<main id="findings-view" role="tabpanel" hidden>
-  <nav id="list" aria-label="findings"></nav>
-  <section id="detail"></section>
+<main>
+  <p class="keys">
+    <kbd>j</kbd>/<kbd>k</kbd> 移動　<kbd>1</kbd> 直す　<kbd>2</kbd> 確認　<kbd>3</kbd> Issue　<kbd>4</kbd> 対応しない　<kbd>Enter</kbd> 詳細と diff を開閉
+  </p>
+  <table class="findings">
+    <caption class="visually-hidden">レビューの指摘と仕分け</caption>
+    <thead><tr><th scope="col">#</th><th scope="col">仕分け</th><th scope="col">severity</th><th scope="col">位置</th><th scope="col">指摘</th><th scope="col"><span class="visually-hidden">詳細</span></th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <p id="no-findings" class="empty" hidden>指摘はありません</p>
+  <section id="requirements" hidden>
+    <h2 class="section-title">要件との対応</h2>
+  </section>
 </main>
 
 <script>window.__REVIEW_DATA__ = /*__DATA__*/null;</script>
@@ -153,9 +189,11 @@ tr.hit td.n { font-weight: 700; }
 (function () {
   var data = window.__REVIEW_DATA__ || { target: {}, findings: [], stats: {} };
   var findings = data.findings || [];
-  var SEVERITIES = data.severities || ['HIGH', 'MEDIUM', 'LOW'];
-  var DISPOSITIONS = data.dispositions || ['fix-now', 'issue', 'wont-fix'];
-  var LABELS = { 'fix-now': '今回直す', 'issue': 'Issue に切る', 'wont-fix': '対応しない' };
+  var requirements = data.requirements || [];
+  var DISPOSITIONS = data.dispositions || ['fix-now', 'ask', 'issue', 'wont-fix'];
+  var LABELS = { 'fix-now': '今回直す', 'ask': '確認する', 'issue': 'Issue に切る', 'wont-fix': '対応しない' };
+  var SHORT = { 'fix-now': '直す', 'ask': '確認', 'issue': 'Issue', 'wont-fix': '対応しない' };
+  var REQ_LABELS = { met: '満たす', missing: '実装に無い', unclear: '判断できない' };
   var STORE = 'review-report:' + (data.report_id || 'default');
 
   var el = function (tag, cls, text) {
@@ -164,17 +202,23 @@ tr.hit td.n { font-weight: 700; }
     if (text !== undefined && text !== null) n.textContent = String(text);
     return n;
   };
+  var numOf = function (f) { return '#' + (f.number || f.id + 1); };
+  var locOf = function (f) { return f.file + (f.line ? ':' + f.line : ''); };
 
-  // 仕分けの上書きはブラウザに残す。JSON 側の値は初期値として扱う
-  var overrides = {};
-  try { overrides = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { overrides = {}; }
+  // 画面での仕分け・変えた理由・確認への答えはブラウザに残す。findings.json の値は初期値
+  var state = { d: {}, r: {}, a: {} };
+  try {
+    var saved = JSON.parse(localStorage.getItem(STORE));
+    if (saved && saved.d) state = { d: saved.d || {}, r: saved.r || {}, a: saved.a || {} };
+  } catch (e) { /* 読めなければ初期値で始める */ }
   var save = function () {
-    try { localStorage.setItem(STORE, JSON.stringify(overrides)); } catch (e) { /* 保存できなくても表示は続ける */ }
+    try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* 保存できなくても表示は続ける */ }
   };
-  var dispositionOf = function (f) {
-    return Object.prototype.hasOwnProperty.call(overrides, f.id) ? overrides[f.id] : f.disposition;
-  };
+  var has = function (obj, k) { return Object.prototype.hasOwnProperty.call(obj, k); };
+  var dispositionOf = function (f) { return has(state.d, f.id) ? state.d[f.id] : f.disposition; };
+  var isChanged = function (f) { return dispositionOf(f) !== f.disposition; };
 
+  // --- ヘッダ ---
   document.getElementById('title').textContent = (data.target && data.target.label) || 'Review report';
   document.title = document.getElementById('title').textContent;
   var s = data.stats || {};
@@ -190,245 +234,186 @@ tr.hit td.n { font-weight: 700; }
     link.textContent = url;
     link.hidden = false;
   }
-
-  // --- タブ ---
-  var panels = {
-    summary: [document.getElementById('tab-summary'), document.getElementById('summary')],
-    findings: [document.getElementById('tab-findings'), document.getElementById('findings-view')]
-  };
-  function show(which) {
-    Object.keys(panels).forEach(function (k) {
-      var on = k === which;
-      panels[k][0].setAttribute('aria-selected', String(on));
-      panels[k][1].hidden = !on;
-    });
-    if (which === 'summary') renderSummary();
+  if (data.assessment && data.assessment.note) {
+    var note = document.getElementById('note');
+    note.textContent = data.assessment.note;
+    note.hidden = false;
   }
-  Object.keys(panels).forEach(function (k) {
-    panels[k][0].addEventListener('click', function () { show(k); });
-  });
 
-  // --- サマリー ---
-  var summary = document.getElementById('summary');
+  var verdictEl = document.getElementById('verdict');
+  var countsEl = document.getElementById('counts');
+  var resetBtn = document.getElementById('reset');
 
-  function renderSummary() {
-    summary.textContent = '';
-    var blocking = findings.filter(function (f) { return dispositionOf(f) === 'fix-now'; });
+  function renderBar() {
+    var by = {};
+    DISPOSITIONS.forEach(function (d) { by[d] = 0; });
+    findings.forEach(function (f) { by[dispositionOf(f)] += 1; });
+    var gaps = requirements.filter(function (r) { return r.status !== 'met'; }).length;
 
-    var box = el('div', 'verdict' + (blocking.length ? '' : ' pass'));
-    box.appendChild(el('h2', null, blocking.length ? 'このままはマージしない' : 'マージしてよい'));
-    box.appendChild(el('p', 'why', blocking.length
-      ? '「今回直す」に仕分けた指摘が ' + blocking.length + ' 件残っている'
-      : '「今回直す」に仕分けた指摘は無い（残りは Issue か見送り）'));
-    if (data.assessment && data.assessment.note) {
-      box.appendChild(el('p', 'note', data.assessment.note));
-    }
-    summary.appendChild(box);
+    var st = by['fix-now'] ? 'block' : (by.ask || gaps) ? 'hold' : 'pass';
+    verdictEl.className = 'verdict' + (st === 'block' ? '' : ' ' + st);
+    verdictEl.textContent = { block: 'このままはマージしない', hold: '確認待ち', pass: 'マージしてよい' }[st];
 
-    summary.appendChild(buildMatrix());
-
-    if (blocking.length) {
-      summary.appendChild(el('h3', null, 'マージ前に直す指摘'));
-      summary.appendChild(buildPicks(blocking));
-    }
-    var issues = findings.filter(function (f) { return dispositionOf(f) === 'issue'; });
-    if (issues.length) {
-      summary.appendChild(el('h3', null, 'Issue に切り出す指摘'));
-      summary.appendChild(buildPicks(issues));
+    countsEl.textContent = '';
+    DISPOSITIONS.forEach(function (d, i) {
+      if (i) countsEl.appendChild(document.createTextNode(' / '));
+      countsEl.appendChild(document.createTextNode(SHORT[d] + ' '));
+      countsEl.appendChild(el('b', null, by[d]));
+    });
+    if (requirements.length) {
+      countsEl.appendChild(document.createTextNode(' ・ 要件の漏れ '));
+      countsEl.appendChild(el('b', null, gaps));
     }
 
-    var actions = el('div', 'actions');
-    var btn = el('button', null, 'Issue 本文を組み立てる');
-    btn.type = 'button';
-    btn.addEventListener('click', function () { buildExport(issues); });
-    actions.appendChild(btn);
-
-    var edited = Object.keys(overrides).length;
-    if (edited) {
-      var reset = el('button', null, '仕分けを初期値に戻す (' + edited + ' 件変更中)');
-      reset.type = 'button';
-      reset.addEventListener('click', function () {
-        overrides = {};
-        save();
-        findings.forEach(paint);
-        renderSummary();
-      });
-      actions.appendChild(reset);
-    }
-    actions.appendChild(el('span', 'hint', '仕分けは「指摘」タブで変えられる。変更はこのブラウザに残る'));
-    summary.appendChild(actions);
+    var edited = findings.filter(isChanged).length;
+    resetBtn.hidden = !edited;
+    resetBtn.textContent = '初期値に戻す (' + edited + ' 件変更中)';
   }
 
-  function buildMatrix() {
-    var counts = {};
-    SEVERITIES.forEach(function (sv) {
-      counts[sv] = {};
-      DISPOSITIONS.forEach(function (d) { counts[sv][d] = 0; });
-    });
-    findings.forEach(function (f) {
-      var sv = counts[f.severity] ? f.severity : SEVERITIES[SEVERITIES.length - 1];
-      counts[sv][dispositionOf(f)] += 1;
-    });
+  // --- 指摘の表 ---
+  var tbody = document.getElementById('rows');
+  var rows = [];
+  var current = -1;
 
-    var table = el('table', 'matrix');
-    var head = el('tr');
-    head.appendChild(el('th', null, 'severity'));
-    DISPOSITIONS.forEach(function (d) { head.appendChild(el('th', null, LABELS[d])); });
-    head.appendChild(el('th', null, '計'));
-    table.appendChild(head);
+  findings.forEach(function (f, index) {
+    var tr = el('tr', 'row');
+    var numCell = el('th', 'num', numOf(f));
+    numCell.scope = 'row';
+    tr.appendChild(numCell);
 
-    var totals = {};
-    DISPOSITIONS.forEach(function (d) { totals[d] = 0; });
-    SEVERITIES.forEach(function (sv) {
-      var row = el('tr');
-      var sum = 0;
-      row.appendChild(el('th', 's-' + sv, sv));
-      DISPOSITIONS.forEach(function (d) {
-        var n = counts[sv][d];
-        sum += n; totals[d] += n;
-        row.appendChild(el('td', n ? '' : 'zero', n));
-      });
-      row.appendChild(el('td', sum ? '' : 'zero', sum));
-      table.appendChild(row);
-    });
-
-    var last = el('tr', 'total');
-    last.appendChild(el('th', null, '計'));
-    var all = 0;
-    DISPOSITIONS.forEach(function (d) { all += totals[d]; last.appendChild(el('td', null, totals[d])); });
-    last.appendChild(el('td', null, all));
-    table.appendChild(last);
-    return table;
-  }
-
-  function buildPicks(items) {
-    var ul = el('ul', 'picks');
-    items.forEach(function (f) {
-      var li = el('li');
-      li.appendChild(el('span', 'badge s-' + f.severity, f.severity));
-      var a = el('a', null, f.file + (f.line ? ':' + f.line : ''));
-      a.addEventListener('click', function () { show('findings'); select(f.id); });
-      li.appendChild(a);
-      li.appendChild(document.createTextNode(' — ' + (f.short_summary || '')));
-      ul.appendChild(li);
-    });
-    return ul;
-  }
-
-  function buildExport(items) {
-    var old = document.getElementById('export');
-    if (old) old.parentNode.removeChild(old);
-    var text = items.map(function (f) {
-      return [
-        '## ' + (f.short_summary || ''),
-        '',
-        '- 位置: `' + f.file + (f.line ? ':' + f.line : '') + '`',
-        '- severity: ' + f.severity + (f.category ? ' / ' + f.category : ''),
-        '',
-        f.summary || '',
-        '',
-        f.failure_scenario ? '**再現条件**: ' + f.failure_scenario : '',
-        f.disposition_reason ? '**今回見送る理由**: ' + f.disposition_reason : ''
-      ].filter(Boolean).join('\n');
-    }).join('\n\n---\n\n');
-
-    var box = el('textarea');
-    box.id = 'export';
-    box.value = text || 'Issue に切る指摘はありません';
-    box.readOnly = true;
-    summary.appendChild(box);
-    box.focus();
-    box.select();
-  }
-
-  // --- 指摘一覧 ---
-  var list = document.getElementById('list');
-  var detail = document.getElementById('detail');
-  var buttons = {};
-
-  var rank = {};
-  SEVERITIES.forEach(function (sv, i) { rank[sv] = i; });
-  var ordered = findings.slice().sort(function (a, b) {
-    return (rank[a.severity] - rank[b.severity]) || (a.id - b.id);
-  });
-
-  SEVERITIES.forEach(function (sv) {
-    var members = ordered.filter(function (f) { return f.severity === sv; });
-    if (!members.length) return;
-    list.appendChild(el('h2', null, sv + ' (' + members.length + ')'));
-    members.forEach(function (f) {
-      var b = el('button', 'item');
-      b.type = 'button';
-      var loc = el('div', 'loc');
-      loc.appendChild(el('span', 'badge s-' + sv, f.category || sv));
-      loc.appendChild(document.createTextNode(f.file + (f.line ? ':' + f.line : '')));
-      b.appendChild(loc);
-      b.appendChild(el('div', 'txt', f.short_summary || f.summary || ''));
-      b.addEventListener('click', function () { select(f.id); });
-      list.appendChild(b);
-      buttons[f.id] = b;
-      paint(f);
-    });
-  });
-
-  function paint(f) {
-    var b = buttons[f.id];
-    if (!b) return;
-    var done = dispositionOf(f) !== 'fix-now';
-    b.className = 'item' + (done ? ' done' : '');
-  }
-
-  function select(id) {
-    var f = findings.filter(function (x) { return x.id === id; })[0];
-    Object.keys(buttons).forEach(function (k) {
-      buttons[k].setAttribute('aria-current', String(Number(k) === id));
-    });
-    detail.textContent = '';
-    if (!f) return;
-
-    detail.appendChild(el('h2', null, f.short_summary || f.summary || ''));
-    var loc = el('div', 'loc', f.file + (f.line ? ':' + f.line : ''));
-    if (f.author) loc.textContent += '  —  @' + f.author;
-    if (f.verdict) loc.textContent += '  —  ' + f.verdict;
-    detail.appendChild(loc);
-
-    var dl = el('dl');
-    [['summary', f.summary], ['failure scenario', f.failure_scenario], ['outcome', f.outcome]]
-      .forEach(function (pair) {
-        if (!pair[1]) return;
-        dl.appendChild(el('dt', null, pair[0]));
-        dl.appendChild(el('dd', null, pair[1]));
-      });
-    detail.appendChild(dl);
-    detail.appendChild(buildTriage(f));
-
-    if (f.hunk) {
-      detail.appendChild(renderHunk(f.hunk, f.line));
-    } else {
-      detail.appendChild(el('p', 'empty', 'この指摘の行は diff に含まれていません'));
-    }
-  }
-
-  function buildTriage(f) {
-    var box = el('fieldset', 'triage');
-    box.appendChild(el('legend', null, '仕分け'));
+    var segCell = el('td');
+    var seg = el('span', 'seg');
+    seg.setAttribute('role', 'group');
+    seg.setAttribute('aria-label', numOf(f) + ' の仕分け');
+    var segButtons = {};
     DISPOSITIONS.forEach(function (d) {
-      var label = el('label');
-      var radio = el('input');
-      radio.type = 'radio';
-      radio.name = 'disposition';
-      radio.checked = dispositionOf(f) === d;
-      radio.addEventListener('change', function () {
-        overrides[f.id] = d;
-        save();
-        paint(f);
-      });
-      label.appendChild(radio);
-      label.appendChild(document.createTextNode(' ' + LABELS[d]));
-      box.appendChild(label);
+      var b = el('button', 'd-' + d, SHORT[d]);
+      b.type = 'button';
+      b.title = LABELS[d];
+      b.addEventListener('click', function (ev) { ev.stopPropagation(); setDisposition(index, d); });
+      seg.appendChild(b);
+      segButtons[d] = b;
     });
-    if (f.disposition_reason) box.appendChild(el('div', 'why', f.disposition_reason));
+    segCell.appendChild(seg);
+    tr.appendChild(segCell);
+
+    var sev = el('td', 'sev');
+    sev.appendChild(el('span', 'badge s-' + f.severity, f.severity));
+    tr.appendChild(sev);
+    tr.appendChild(el('td', 'loc mono', locOf(f)));
+
+    var what = el('td', 'what');
+    var txt = el('div', 'txt');
+    if (f.category === 'human') {
+      txt.appendChild(el('span', 'badge c-human', f.author ? '@' + f.author : 'human'));
+      txt.appendChild(document.createTextNode(' '));
+    }
+    txt.appendChild(document.createTextNode(f.short_summary || f.summary || ''));
+    what.appendChild(txt);
+    var extra = el('div');
+    what.appendChild(extra);
+    tr.appendChild(what);
+
+    var toggle = el('td', 'toggle', '▸');
+    tr.appendChild(toggle);
+
+    var detail = el('tr', 'detail');
+    detail.hidden = true;
+    var dcell = el('td');
+    dcell.colSpan = 6;
+    detail.appendChild(dcell);
+
+    tr.addEventListener('click', function (ev) {
+      if (ev.target.closest('input')) return;
+      focusRow(index);
+      toggleDetail(index);
+    });
+    tbody.appendChild(tr);
+    tbody.appendChild(detail);
+    rows.push({ f: f, tr: tr, seg: segButtons, extra: extra, detail: detail, cell: dcell, toggle: toggle, built: false });
+    paintRow(index);
+  });
+
+  function subInput(label, value, onInput) {
+    var box = el('div', 'sub-line');
+    box.appendChild(el('div', null, label));
+    var input = el('input');
+    input.type = 'text';
+    input.value = value || '';
+    input.addEventListener('click', function (ev) { ev.stopPropagation(); });
+    input.addEventListener('input', function () { onInput(input.value); });
+    box.appendChild(input);
     return box;
+  }
+
+  function paintRow(index) {
+    var row = rows[index];
+    var f = row.f;
+    var d = dispositionOf(f);
+    DISPOSITIONS.forEach(function (k) { row.seg[k].setAttribute('aria-pressed', String(k === d)); });
+    // ask はまだ決まっていないので、片付いた表示にしない
+    row.tr.className = 'row' + (d === 'fix-now' || d === 'ask' ? '' : ' settled') + (index === current ? ' current' : '');
+
+    row.extra.textContent = '';
+    if (d === 'ask') {
+      // 画面で ask に変えた指摘の disposition_reason は見送りの理由で、問いではない
+      var q = f.disposition === 'ask' && f.disposition_reason
+        ? f.disposition_reason
+        : '確かめたいことは未記入（画面で「確認する」に変えた指摘）';
+      row.extra.appendChild(el('div', 'sub-line question', '確かめたいこと: ' + q));
+      row.extra.appendChild(subInput('答え', state.a[f.id], function (v) { state.a[f.id] = v; save(); }));
+    } else if (f.disposition_reason && !isChanged(f)) {
+      row.extra.appendChild(el('div', 'sub-line', f.disposition_reason));
+    }
+    if (isChanged(f)) {
+      row.extra.appendChild(el('div', 'changed', '初期値「' + LABELS[f.disposition] + '」から変更'));
+      row.extra.appendChild(subInput('変えた理由（任意）', state.r[f.id], function (v) { state.r[f.id] = v; save(); }));
+    }
+  }
+
+  function setDisposition(index, d) {
+    var f = rows[index].f;
+    if (d === f.disposition) delete state.d[f.id]; else state.d[f.id] = d;
+    save();
+    paintRow(index);
+    renderBar();
+  }
+
+  function focusRow(index) {
+    var prev = current;
+    current = index;
+    if (prev >= 0) paintRow(prev);
+    paintRow(index);
+    rows[index].tr.scrollIntoView({ block: 'nearest' });
+  }
+
+  function toggleDetail(index) {
+    var row = rows[index];
+    if (!row.built) { buildDetail(row); row.built = true; }
+    row.detail.hidden = !row.detail.hidden;
+    row.toggle.textContent = row.detail.hidden ? '▸' : '▾';
+  }
+
+  function buildDetail(row) {
+    var f = row.f;
+    var dl = el('dl');
+    [
+      ['summary', f.summary],
+      ['failure scenario', f.failure_scenario],
+      ['verdict', f.verdict],
+      ['category', f.category],
+      ['outcome', f.outcome]
+    ].forEach(function (pair) {
+      if (!pair[1]) return;
+      dl.appendChild(el('dt', null, pair[0]));
+      dl.appendChild(el('dd', null, pair[1]));
+    });
+    row.cell.appendChild(dl);
+    if (f.hunk) {
+      row.cell.appendChild(renderHunk(f.hunk, f.line));
+    } else {
+      row.cell.appendChild(el('p', 'empty', 'この指摘の行は diff に含まれていません'));
+    }
   }
 
   function renderHunk(hunk, line) {
@@ -449,9 +434,131 @@ tr.hit td.n { font-weight: 700; }
     return wrap;
   }
 
-  if (ordered.length) select(ordered[0].id);
-  else detail.appendChild(el('p', 'empty', '指摘はありません'));
-  show('summary');
+  // --- 要件との対応 ---
+  if (requirements.length) {
+    var section = document.getElementById('requirements');
+    var table = el('table', 'reqs');
+    var head = el('tr');
+    ['#', '要件', '状態', '根拠'].forEach(function (h) { head.appendChild(el('th', null, h)); });
+    table.appendChild(head);
+    requirements.forEach(function (r) {
+      var tr = el('tr');
+      tr.appendChild(el('td', null, r.number));
+      tr.appendChild(el('td', null, r.criterion));
+      tr.appendChild(el('td', 'r-' + r.status, REQ_LABELS[r.status] || r.status));
+      tr.appendChild(el('td', 'mono', r.evidence || ''));
+      table.appendChild(tr);
+    });
+    section.appendChild(table);
+    section.hidden = false;
+  }
+  if (!findings.length) document.getElementById('no-findings').hidden = false;
+
+  // --- 指示文 ---
+  // Claude に貼り戻す文。普段の指示（「その 2 件を直して」「#3 は Issue に」）の形に寄せる
+  function buildInstruction() {
+    var nums = function (d) {
+      return findings.filter(function (f) { return dispositionOf(f) === d; }).map(numOf).join('・');
+    };
+    var lines = [];
+    var head = [];
+    if (nums('fix-now')) head.push(nums('fix-now') + ' を直して。');
+    if (nums('issue')) head.push(nums('issue') + ' は Issue に。');
+    if (nums('wont-fix')) head.push(nums('wont-fix') + ' は対応しない。');
+    lines.push('レビューの仕分け（' + ((data.target && data.target.label) || 'review') + '）:');
+    lines.push(head.join('') || '直すものは無い。');
+
+    var changed = findings.filter(isChanged).map(function (f) {
+      var why = (state.r[f.id] || '').trim();
+      return numOf(f) + ' ' + LABELS[f.disposition] + '→' + LABELS[dispositionOf(f)] + (why ? '（' + why + '）' : '');
+    });
+    if (changed.length) lines.push('仕分けを変えたもの: ' + changed.join('、'));
+
+    var asks = findings.filter(function (f) { return dispositionOf(f) === 'ask'; });
+    var answered = asks.filter(function (f) { return (state.a[f.id] || '').trim(); });
+    var open = asks.filter(function (f) { return !(state.a[f.id] || '').trim(); });
+    if (answered.length) {
+      lines.push('確認への答え: ' + answered.map(function (f) { return numOf(f) + ' ' + state.a[f.id].trim(); }).join('、'));
+    }
+    if (open.length) lines.push('まだ答えていない確認: ' + open.map(numOf).join('・'));
+    return lines.join('\n');
+  }
+
+  var box = document.getElementById('instruction');
+  var said = document.getElementById('said');
+  var saidTimer = null;
+  var lastMessage = '';
+  function report(ok, message) {
+    clearTimeout(saidTimer);
+    // VoiceOver は直前と同じ文言を読まないので、繰り返しのときだけ見えない空白で変える
+    if (message === lastMessage) message += ' ';
+    lastMessage = message;
+    said.className = 'said' + (ok ? '' : ' failed');
+    said.textContent = message;
+    saidTimer = setTimeout(function () { said.textContent = ''; }, 4000);
+  }
+
+  // Clipboard API は secure context でしか使えず、file:// で開くこの画面ではたいてい無い。
+  // ページのプロトコルを選べないので、クリックの中で同期的に execCommand で書く
+  function legacyCopy(text) {
+    var field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.cssText = 'position:fixed;inset-block-start:0;opacity:0';
+    document.body.appendChild(field);
+    field.select();
+    try { return document.execCommand('copy'); } catch (e) { return false; } finally { field.remove(); }
+  }
+
+  document.getElementById('copy').addEventListener('click', function () {
+    var text = buildInstruction();
+    box.value = text;
+    box.hidden = false;
+    var done = function () { report(true, 'コピーしました。Claude に貼り付けてください'); };
+    var failed = function () {
+      box.focus();
+      box.select();
+      report(false, 'コピーできませんでした。選択した文をコピーしてください');
+    };
+    if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        // 拒否のあとはクリックの中ではないので execCommand は効かない。選択状態で渡す
+        failed();
+      });
+    } else if (legacyCopy(text)) {
+      done();
+    } else {
+      failed();
+    }
+  });
+
+  resetBtn.addEventListener('click', function () {
+    state = { d: {}, r: {}, a: state.a };
+    save();
+    rows.forEach(function (row, i) { paintRow(i); });
+    renderBar();
+  });
+
+  // --- キー操作 ---
+  document.addEventListener('keydown', function (ev) {
+    if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    var t = ev.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
+      if (ev.key === 'Escape') t.blur();
+      return;
+    }
+    if (!rows.length) return;
+    var i = current < 0 ? 0 : current;
+    if (ev.key === 'j') { focusRow(Math.min(rows.length - 1, current + 1)); }
+    else if (ev.key === 'k') { focusRow(Math.max(0, current < 0 ? 0 : current - 1)); }
+    else if (ev.key === 'Enter' || ev.key === 'o') { if (current < 0) focusRow(0); toggleDetail(i); }
+    else if (/^[1-4]$/.test(ev.key)) { if (current < 0) focusRow(0); setDisposition(i, DISPOSITIONS[Number(ev.key) - 1]); }
+    else return;
+    ev.preventDefault();
+  });
+
+  renderBar();
+  if (rows.length) focusRow(0);
 })();
 </script>
 </body>

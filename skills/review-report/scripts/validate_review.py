@@ -14,7 +14,8 @@ from pathlib import Path
 
 DATA_PREFIX = "window.__REVIEW_DATA__ = "
 SEVERITIES = ("HIGH", "MEDIUM", "LOW")
-DISPOSITIONS = ("fix-now", "issue", "wont-fix")
+DISPOSITIONS = ("fix-now", "ask", "issue", "wont-fix")
+REQUIREMENT_STATUSES = ("met", "missing", "unclear")
 RESOURCE_ATTR = re.compile(r"""\b(?:src|href)\s*=\s*["']([^"']+)["']""", re.I)
 HIDDEN_RULE = re.compile(r"\[hidden\]\s*\{[^}]*display\s*:\s*none\s*!important", re.I)
 
@@ -65,8 +66,8 @@ def check(html, expect_findings=None):
     for url in external_resources(html):
         problems.append(f"外部リソースを参照している: {url}")
 
-    # タブの切替は hidden 属性に頼っている。author origin の display 指定に負けると
-    # サマリーの下に指摘ペインが重なって出るが、DOM を見るだけでは分からない
+    # 詳細行や指示文の開閉は hidden 属性に頼っている。author origin の display 指定に
+    # 負けると閉じたはずの要素が出たままになるが、DOM を見るだけでは分からない
     if not HIDDEN_RULE.search(html):
         problems.append("[hidden] を display: none !important で押さえる CSS がありません")
 
@@ -81,6 +82,13 @@ def check(html, expect_findings=None):
             problems.append(f"{where} の severity が不正: {item.get('severity')!r}")
         if item.get("disposition") not in DISPOSITIONS:
             problems.append(f"{where} の disposition が不正: {item.get('disposition')!r}")
+
+    for req in data.get("requirements", []):
+        where = f"requirements[{req.get('number')}]"
+        if not req.get("criterion"):
+            problems.append(f"{where} に criterion がありません")
+        if req.get("status") not in REQUIREMENT_STATUSES:
+            problems.append(f"{where} の status が不正: {req.get('status')!r}")
 
     return data, problems
 
