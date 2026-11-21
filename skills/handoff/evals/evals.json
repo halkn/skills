@@ -103,6 +103,22 @@
         "[critical] gh issue create を実行せず、対象のリポジトリ（halkn/skills）と本文を示して作成してよいかを聞いている",
         "本文を不具合型（事象 / 切り分け / 原因）にし、white-space が原因かは未確認として扱っている"
       ]
+    },
+    {
+      "id": 8,
+      "name": "claude-ai-chat",
+      "prompt": "（このやり取りは claude.ai のチャット。gh は使えず、リポジトリも読めない）\n\nhalkn/skills の review-report で、レポートの出力先を作業木の .scratch/review-report/ から XDG の state dir（$XDG_STATE_HOME/review-report/、未設定なら ~/.local/state/review-report/）に移したい。理由は、作業木に置くと git worktree を消したときにレポートも一緒に消えるから。出力先を決めているのは skills/review-report/SKILL.md の「出力」の節だと思う。既存の .scratch/ のレポートは移さなくていい。これを Claude Code への実装依頼にして。",
+      "expected_output": "gh もリポジトリも使えない環境からの実装依頼なので、行き先を貼り付ける引き継ぎ文ではなく issue・設計書にする。gh で作成できないので、1 行目に # <タイトル> を置いた実装計画型の本文全体を 1 つのコードブロックで提示し、作成はしない。リポジトリを読めないので、パスはプロンプトに出てきたものだけを書き、出どころが会話だけのもの（SKILL.md の「出力」の節）は参照で実装者に確かめさせる。本文は である調 で書く。",
+      "files": [],
+      "expectations": [
+        "[critical] 行き先を issue・設計書にしている（目的 / 今の状態 / 次にやること … の貼り付ける引き継ぎ文の形にしていない）",
+        "[critical] 本文全体が 1 つのコードブロックに入り、その 1 行目が `# <タイトル>` になっている。内側にコードブロックがあるなら外側が 4 連バッククォートになっている",
+        "[critical] 本文中のファイルパス・節の名前が、プロンプトに出てきたもの（skills/review-report/SKILL.md、.scratch/review-report/、$XDG_STATE_HOME/review-report/、~/.local/state/review-report/）とその親ディレクトリだけで、リポジトリを読んだかのような行番号や他のファイルを書いていない",
+        "[critical] 本文が である調（常体）で書かれ、です・ます調が混ざっていない",
+        "skills/review-report/SKILL.md の「出力」の節を、ユーザーの推測として扱い、参照で実装者に確かめさせている",
+        "gh issue create などの作成コマンドを実行せず、本文の提示で止めている",
+        "見出しが 目的 / 現状 / 決定事項 / Scope / 完了条件 のうち該当するものの順に並び、既存のレポートを移さないことが「含まない」か決定事項にある"
+      ]
     }
   ]
 }
