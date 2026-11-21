@@ -66,8 +66,8 @@ def check(html, expect_findings=None):
     for url in external_resources(html):
         problems.append(f"外部リソースを参照している: {url}")
 
-    # タブの切替は hidden 属性に頼っている。author origin の display 指定に負けると
-    # サマリーの下に指摘ペインが重なって出るが、DOM を見るだけでは分からない
+    # 詳細行や指示文の開閉は hidden 属性に頼っている。author origin の display 指定に
+    # 負けると閉じたはずの要素が出たままになるが、DOM を見るだけでは分からない
     if not HIDDEN_RULE.search(html):
         problems.append("[hidden] を display: none !important で押さえる CSS がありません")
 
