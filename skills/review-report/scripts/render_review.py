@@ -223,7 +223,24 @@ def attach_hunks(findings, files):
 
 
 SEVERITIES = ("HIGH", "MEDIUM", "LOW")
-DISPOSITIONS = ("fix-now", "issue", "wont-fix")
+DISPOSITIONS = ("fix-now", "ask", "issue", "wont-fix")
+REQUIREMENT_STATUSES = ("met", "missing", "unclear")
+
+
+def normalize_requirements(items, problems):
+    result = []
+    for index, req in enumerate(items or []):
+        where = f"requirements[{index}]"
+        criterion = str(req.get("criterion") or "").strip()
+        if not criterion:
+            problems.append(f"{where}: criterion がありません")
+        status = str(req.get("status") or "").strip().lower()
+        if status not in REQUIREMENT_STATUSES:
+            problems.append(f"{where}: status が {req.get('status')!r}（{'/'.join(REQUIREMENT_STATUSES)}）")
+        result.append(
+            {"number": index + 1, "criterion": criterion, "status": status, "evidence": req.get("evidence")}
+        )
+    return result
 
 
 def build_payload(report, files):
@@ -233,6 +250,7 @@ def build_payload(report, files):
     # 仕分けは画面上で変えられるので集計は JS が持つ。ここでは値の正規化だけ行う
     problems = []
     for item in findings:
+        item["number"] = item["id"] + 1
         verdict = item.get("verdict")
         stats[verdict if verdict in ("CONFIRMED", "PLAUSIBLE") else "unknown"] += 1
         if item["hunk"] is None:
@@ -248,6 +266,9 @@ def build_payload(report, files):
         if disposition not in DISPOSITIONS:
             problems.append(f"{where}: disposition が {item.get('disposition')!r}（{'/'.join(DISPOSITIONS)}）")
         item["disposition"] = disposition
+        if disposition == "ask" and not str(item.get("disposition_reason") or "").strip():
+            problems.append(f"{where}: ask には確かめたいことを disposition_reason に書く")
+    requirements = normalize_requirements(report.get("requirements"), problems)
     if problems:
         raise ValueError("findings.json の値が不正です:\n  " + "\n  ".join(problems))
 
@@ -258,6 +279,7 @@ def build_payload(report, files):
         [
             report.get("target", {}).get("label"),
             [(f.get("file"), f.get("line"), f.get("disposition")) for f in findings],
+            [(r["criterion"], r["status"]) for r in requirements],
         ],
         ensure_ascii=False,
     )
@@ -267,6 +289,7 @@ def build_payload(report, files):
         "level": report.get("level"),
         "assessment": report.get("assessment", {}),
         "findings": findings,
+        "requirements": requirements,
         "stats": stats,
         "severities": list(SEVERITIES),
         "dispositions": list(DISPOSITIONS),
@@ -413,6 +436,7 @@ def _selftest():
     assert parse_diff("") == {}
 
     _selftest_matching(files)
+    _selftest_triage(files)
     _selftest_render(files)
     _selftest_concatenated_diffs()
     _selftest_diff_line_lookalikes()
@@ -677,6 +701,61 @@ def _selftest_matching(files):
 
     empty = build_payload({"findings": []}, files)
     assert empty["stats"]["total"] == 0
+    assert empty["requirements"] == []
+
+
+def _selftest_triage(files):
+    """ask の扱い・指摘の番号・要件との対応表。"""
+    finding = {"file": "src/app.py", "line": 22, "short_summary": "a", "severity": "LOW"}
+
+    asked = build_payload(
+        {"findings": [{**finding, "disposition": " ASK ", "disposition_reason": "意図した同期処理か"}]}, files
+    )
+    assert asked["findings"][0]["disposition"] == "ask"
+    assert "ask" in asked["dispositions"]
+
+    # 確かめたいことが書かれていない ask は、ユーザーが答えようがない
+    for reason in (None, "", "  "):
+        try:
+            build_payload({"findings": [{**finding, "disposition": "ask", "disposition_reason": reason}]}, files)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"理由の無い ask で落ちていない: {reason!r}")
+
+    # テキストと HTML で同じ番号を出すため、findings.json の並びどおりに 1 から振る
+    numbered = build_payload(
+        {"findings": [{**finding, "disposition": "issue"}, {**finding, "line": 21, "disposition": "fix-now"}]},
+        files,
+    )
+    assert [f["number"] for f in numbered["findings"]] == [1, 2]
+
+    reqs = build_payload(
+        {
+            "findings": [],
+            "requirements": [
+                {"criterion": "a を返す", "status": "met", "evidence": "src/app.py:22"},
+                {"criterion": "b を拒否する", "status": " Missing "},
+                {"criterion": "c の扱い", "status": "unclear", "evidence": None},
+            ],
+        },
+        files,
+    )
+    assert [r["status"] for r in reqs["requirements"]] == ["met", "missing", "unclear"]
+    assert [r["number"] for r in reqs["requirements"]] == [1, 2, 3]
+
+    for bad in ({"criterion": "x", "status": "bogus"}, {"criterion": "", "status": "met"}, {"status": "met"}):
+        try:
+            build_payload({"findings": [], "requirements": [bad]}, files)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"不正な requirements で落ちていない: {bad}")
+
+    # 要件の状態が変わっても別の報告として扱う（判定が変わるため）
+    met = {"findings": [], "requirements": [{"criterion": "x", "status": "met"}]}
+    gap = {"findings": [], "requirements": [{"criterion": "x", "status": "missing"}]}
+    assert build_payload(met, files)["report_id"] != build_payload(gap, files)["report_id"]
 
 
 def _selftest_render(files):

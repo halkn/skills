@@ -94,7 +94,7 @@ npx skills add halkn/skills --global --agent claude-code --skill handoff --yes
 |------|------|
 | [git-flow](skills/git-flow/SKILL.md) | ブランチ作成→コミット→push→PR作成→マージのGit作業手順（GitHub は gh、Azure DevOps は az repos）。それ以外のリモートではユーザーに確認する |
 | [handoff](skills/handoff/SKILL.md) | 作業を別のセッション・別のリポジトリ・issue・設計書に引き継ぐ文を書く。行き先を選び、今すぐ続けるセッションには貼り付ける引き継ぎ文を、後で着手する作業には実装計画として使える issue・設計書を書く。GitHub 以外やチャットでの本文作成にも対応 |
-| [review-report](skills/review-report/SKILL.md) | `/code-review` の指摘を、該当 diff と並べて読める1枚のHTMLレポートにする。レビュー自体は行わない |
+| [review-report](skills/review-report/SKILL.md) | `/code-review` の指摘を仕分け（今回直す・確認する・Issue に切る・対応しない）、issue の完了条件と照らしてマージ可否を出す。頼まれれば該当 diff と並べた1枚のHTMLレポートにする。レビュー自体は行わない |
 | [session-retrospective](skills/session-retrospective/SKILL.md) | Claude Code のセッションを振り返り、同じ手戻りを次のセッションで起こさないための環境の改善（lint・hook・settings.json・CLAUDE.md・docs・skill・memory）を提案する。自動では起動しないので `/session-retrospective`（プラグインから入れた場合は `/halkn:session-retrospective`）で呼ぶ |
 
 ## 開発フロー

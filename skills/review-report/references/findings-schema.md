@@ -1,6 +1,6 @@
 # findings.json のスキーマ
 
-`render_review.py` が読む入力の形式と、`/code-review` の出力からここへ書き起こすときの規約。
+`render_review.py` が読む入力の形式と、`/code-review` の出力からここへ書き起こすときの規約。`severity`・`disposition`・`requirements` の値をどう決めるかは [triage.md](triage.md) にある。
 
 ## 全体
 
@@ -17,7 +17,8 @@
   "assessment": {
     "note": "diff パーサに、この skill 自身の手順で必ず踏む欠陥が2件ある。…"
   },
-  "findings": []
+  "findings": [],
+  "requirements": []
 }
 ```
 
@@ -30,7 +31,8 @@
 | `target.head` | | 比較先の ref |
 | `level` | | `/code-review` を実行した effort level（`low`〜`max`）。不明なら省く |
 | `assessment.note` | | マージ可否の根拠を述べる短い文章。**可否そのものは書かない**（画面が仕分けから算出し、ユーザーが仕分けを変えれば追随するため） |
-| `findings` | ○ | 下記オブジェクトの配列。0 件でもよい |
+| `findings` | ○ | 下記オブジェクトの配列。0 件でもよい。**severity 順（HIGH → LOW）に並べる**。並びどおりに `#1` から番号が付き、テキストの提示と HTML で同じ番号になる |
+| `requirements` | | issue の完了条件との対応表。下記。突合しなかったときは省く |
 
 ## findings の 1 要素
 
@@ -64,28 +66,24 @@
 | `outcome` | | 修正後の再報告でのみ `fixed` / `skipped` / `no_change_needed`。通常は `null` |
 | `author` | | `category: "human"` のとき、コメントした人の GitHub ログイン名 |
 | `severity` | ○ | `HIGH` / `MEDIUM` / `LOW`。レビューが severity を出していればそれを移す |
-| `disposition` | ○ | `fix-now` / `issue` / `wont-fix`。下記の基準で決める |
-| `disposition_reason` | | `issue` と `wont-fix` のとき、そう決めた理由を 1 文で |
-
-### severity の決め方
-
-レビューが severity を出していればそのまま移す。出していない場合だけ、`failure_scenario` の実害から決める。
-
-- `HIGH` — データの破壊・情報漏洩・不可逆な操作、または本番の主要な経路が壊れる
-- `MEDIUM` — 実際に踏む条件があり、踏むと誤った出力になる
-- `LOW` — 実害はあるが条件が限定的、または品質・保守性の問題
-
-### disposition の決め方
-
-**マージ可否は `disposition` から画面が算出する。** `fix-now` が 1 件でも残っていれば「このままはマージしない」になるので、その重みで判断する。
-
-- `fix-now` — **今回の変更が持ち込んだ欠陥**で、マージ前に直すべきもの。この PR を通すと本番に入ってしまうもの
-- `issue` — 実害はあるが、今回の変更に起因しない（既存バグ）か、修正が今回の範囲を超えて別 PR になるもの
-- `wont-fix` — 意図した挙動、実害が無視できる、または今回の設計判断として受け入れるもの
-
-判断に迷ったら `fix-now` に寄せない。**`fix-now` は「マージを止める」という主張**なので、止めるほどではないものは `issue` にする。
+| `disposition` | ○ | `fix-now` / `ask` / `issue` / `wont-fix` |
+| `disposition_reason` | | `issue` と `wont-fix` ではそう決めた理由を 1 文で。`ask` では確かめたいことを 1 文で書き、**必須**（無いと `render_review.py` が落とす） |
 
 `disposition` は画面上でユーザーが変更でき、変更はブラウザに保持される。ここに書くのは初期値であって最終決定ではない。
+
+## requirements の 1 要素
+
+```json
+{ "criterion": "空の入力ではエラーを返す", "status": "met", "evidence": "src/parse.py:42" }
+```
+
+| キー | 必須 | 内容 |
+|---|---|---|
+| `criterion` | ○ | issue の完了条件の 1 項目。issue の文言をそのまま移す |
+| `status` | ○ | `met` / `missing` / `unclear` |
+| `evidence` | | `met` の根拠の `path:line`。`missing` では省く |
+
+並びどおりに `#1` から番号が付く。`missing` と `unclear` が 1 件でもあれば、画面の判定は「確認待ち」以上になる。
 
 ## 書き起こしの規約
 
@@ -95,6 +93,6 @@
 - **`line` は head 側の行番号。** `/code-review` は `file:line` 形式で位置を示すのでその数値をそのまま使う。diff の hunk ヘッダの数値ではない
 - **出ていない情報は `null` にする。** 推測で `verdict` や `category` を埋めない
 - **文言を要約し直さない。** `summary` と `failure_scenario` はレビューの記述をそのまま移す。`short_summary` だけはこちらで 60 文字以内に詰める
-- **指摘を取捨選択しない。** 対応しないと判断した指摘も全件入れる。判断は HTML を見てから行う
+- **指摘を取捨選択しない。** 対応しないと判断した指摘も全件入れ、`wont-fix` に仕分ける。落とすとユーザーが仕分けを見直せない
 
 `gh` から取り込む人間のレビューコメントは `category: "human"`、`verdict: null`、`author` にログイン名を入れ、コメント本文を `summary` に、その 1 行目を `short_summary` にする。

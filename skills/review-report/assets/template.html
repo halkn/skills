@@ -54,8 +54,10 @@ header a { color: var(--accent); }
   border-radius: 6px; padding: 16px 20px; background: var(--panel);
 }
 .verdict.pass { border-left-color: var(--ok); }
+.verdict.hold { border-left-color: var(--medium); }
 .verdict h2 { margin: 0; font-size: 18px; color: var(--block); }
 .verdict.pass h2 { color: var(--ok); }
+.verdict.hold h2 { color: var(--medium); }
 .verdict .why { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
 .verdict .note { margin: 12px 0 0; }
 
@@ -65,6 +67,12 @@ table.matrix th { background: var(--panel); font-weight: 600; }
 table.matrix th:first-child, table.matrix td:first-child { text-align: left; }
 table.matrix tr.total td, table.matrix tr.total th { font-weight: 600; }
 table.matrix td.zero { color: var(--muted); }
+table.reqs { border-collapse: collapse; width: 100%; }
+table.reqs th, table.reqs td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+table.reqs th { background: var(--panel); font-weight: 600; }
+table.reqs td.r-missing { color: var(--block); font-weight: 600; }
+table.reqs td.r-unclear { color: var(--medium); font-weight: 600; }
+table.reqs td.r-met { color: var(--ok); }
 
 #summary h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 8px; }
 ul.picks { margin: 0; padding-left: 20px; }
@@ -154,8 +162,11 @@ tr.hit td.n { font-weight: 700; }
   var data = window.__REVIEW_DATA__ || { target: {}, findings: [], stats: {} };
   var findings = data.findings || [];
   var SEVERITIES = data.severities || ['HIGH', 'MEDIUM', 'LOW'];
-  var DISPOSITIONS = data.dispositions || ['fix-now', 'issue', 'wont-fix'];
-  var LABELS = { 'fix-now': '今回直す', 'issue': 'Issue に切る', 'wont-fix': '対応しない' };
+  var requirements = data.requirements || [];
+  var DISPOSITIONS = data.dispositions || ['fix-now', 'ask', 'issue', 'wont-fix'];
+  var LABELS = { 'fix-now': '今回直す', 'ask': '確認する', 'issue': 'Issue に切る', 'wont-fix': '対応しない' };
+  var REQ_LABELS = { met: '満たす', missing: '実装に無い', unclear: '判断できない' };
+  var numOf = function (f) { return '#' + (f.number || f.id + 1); };
   var STORE = 'review-report:' + (data.report_id || 'default');
 
   var el = function (tag, cls, text) {
@@ -214,12 +225,22 @@ tr.hit td.n { font-weight: 700; }
   function renderSummary() {
     summary.textContent = '';
     var blocking = findings.filter(function (f) { return dispositionOf(f) === 'fix-now'; });
+    var asks = findings.filter(function (f) { return dispositionOf(f) === 'ask'; });
+    var gaps = requirements.filter(function (r) { return r.status !== 'met'; });
 
-    var box = el('div', 'verdict' + (blocking.length ? '' : ' pass'));
-    box.appendChild(el('h2', null, blocking.length ? 'このままはマージしない' : 'マージしてよい'));
-    box.appendChild(el('p', 'why', blocking.length
+    var state = blocking.length ? 'block' : (asks.length || gaps.length) ? 'hold' : 'pass';
+    var box = el('div', 'verdict' + (state === 'block' ? '' : ' ' + state));
+    box.appendChild(el('h2', null, {
+      block: 'このままはマージしない',
+      hold: '確認待ち',
+      pass: 'マージしてよい'
+    }[state]));
+    var why = state === 'block'
       ? '「今回直す」に仕分けた指摘が ' + blocking.length + ' 件残っている'
-      : '「今回直す」に仕分けた指摘は無い（残りは Issue か見送り）'));
+      : state === 'hold'
+        ? '「確認する」の指摘が ' + asks.length + ' 件、満たすと言えない要件が ' + gaps.length + ' 件ある'
+        : '「今回直す」「確認する」に仕分けた指摘は無く、要件の漏れも無い';
+    box.appendChild(el('p', 'why', why));
     if (data.assessment && data.assessment.note) {
       box.appendChild(el('p', 'note', data.assessment.note));
     }
@@ -230,6 +251,14 @@ tr.hit td.n { font-weight: 700; }
     if (blocking.length) {
       summary.appendChild(el('h3', null, 'マージ前に直す指摘'));
       summary.appendChild(buildPicks(blocking));
+    }
+    if (asks.length) {
+      summary.appendChild(el('h3', null, '確認する指摘'));
+      summary.appendChild(buildPicks(asks, true));
+    }
+    if (requirements.length) {
+      summary.appendChild(el('h3', null, '要件との対応'));
+      summary.appendChild(buildRequirements());
     }
     var issues = findings.filter(function (f) { return dispositionOf(f) === 'issue'; });
     if (issues.length) {
@@ -301,18 +330,36 @@ tr.hit td.n { font-weight: 700; }
     return table;
   }
 
-  function buildPicks(items) {
+  function buildPicks(items, withReason) {
     var ul = el('ul', 'picks');
     items.forEach(function (f) {
       var li = el('li');
+      li.appendChild(document.createTextNode(numOf(f) + ' '));
       li.appendChild(el('span', 'badge s-' + f.severity, f.severity));
       var a = el('a', null, f.file + (f.line ? ':' + f.line : ''));
       a.addEventListener('click', function () { show('findings'); select(f.id); });
       li.appendChild(a);
       li.appendChild(document.createTextNode(' — ' + (f.short_summary || '')));
+      if (withReason && f.disposition_reason) li.appendChild(el('div', 'hint', f.disposition_reason));
       ul.appendChild(li);
     });
     return ul;
+  }
+
+  function buildRequirements() {
+    var table = el('table', 'reqs');
+    var head = el('tr');
+    ['#', '要件', '状態', '根拠'].forEach(function (h) { head.appendChild(el('th', null, h)); });
+    table.appendChild(head);
+    requirements.forEach(function (r) {
+      var row = el('tr');
+      row.appendChild(el('td', null, r.number));
+      row.appendChild(el('td', null, r.criterion));
+      row.appendChild(el('td', 'r-' + r.status, REQ_LABELS[r.status] || r.status));
+      row.appendChild(el('td', 'mono', r.evidence || ''));
+      table.appendChild(row);
+    });
+    return table;
   }
 
   function buildExport(items) {
@@ -360,6 +407,7 @@ tr.hit td.n { font-weight: 700; }
       var b = el('button', 'item');
       b.type = 'button';
       var loc = el('div', 'loc');
+      loc.appendChild(document.createTextNode(numOf(f) + ' '));
       loc.appendChild(el('span', 'badge s-' + sv, f.category || sv));
       loc.appendChild(document.createTextNode(f.file + (f.line ? ':' + f.line : '')));
       b.appendChild(loc);
@@ -374,7 +422,9 @@ tr.hit td.n { font-weight: 700; }
   function paint(f) {
     var b = buttons[f.id];
     if (!b) return;
-    var done = dispositionOf(f) !== 'fix-now';
+    // ask はまだ決まっていないので、片付いた表示にしない
+    var d = dispositionOf(f);
+    var done = d !== 'fix-now' && d !== 'ask';
     b.className = 'item' + (done ? ' done' : '');
   }
 
@@ -386,7 +436,7 @@ tr.hit td.n { font-weight: 700; }
     detail.textContent = '';
     if (!f) return;
 
-    detail.appendChild(el('h2', null, f.short_summary || f.summary || ''));
+    detail.appendChild(el('h2', null, numOf(f) + ' ' + (f.short_summary || f.summary || '')));
     var loc = el('div', 'loc', f.file + (f.line ? ':' + f.line : ''));
     if (f.author) loc.textContent += '  —  @' + f.author;
     if (f.verdict) loc.textContent += '  —  ' + f.verdict;
