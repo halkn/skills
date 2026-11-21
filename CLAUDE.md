@@ -5,10 +5,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## リポジトリの目的
 
 `halkn/skills` は、Claude Code用のAgent Skillを複数端末に配布・同期するためのリポジトリ。
-配布経路は `gh skill`(GitHub CLI)と `npx skills`(Vercelの Skills CLI、npmパッケージ `skills`)の2つ。
+配布経路は `gh skill`(GitHub CLI)と `npx skills`(Vercelの Skills CLI、npmパッケージ `skills`)の2つで、claude.ai・Cowork 向けにはプラグインマーケットプレイス(下記)を加えた3つ。
 検証・配布・更新は両CLIの機能(`publish`・`install`/`add`・`update`・版の固定)に任せ、リポジトリ側では
 再実装しない。リポジトリ側が持つのは、両CLIで同じskillが入ることを確かめるCIと、`skills/` の変更ごとに
 リリースを作るCDだけ。
+
+claude.ai・Cowork 向けには、`.claude-plugin/marketplace.json` でリポジトリをプラグインマーケットプレイス
+`halkn-skills` として公開する。プラグイン `halkn` は `source: "./"` でリポジトリ直下を指し、既定の `skills/` の走査で
+`skills/` 配下だけが入る（`.claude/skills/` は入らない）。そのため `skills/` の配置を変えない、リポジトリ直下に
+`bin/`（claude.ai と Cowork が入れないプラグインになる）・`commands/`・`agents/`・`hooks/` などプラグインの
+既定の置き場所を作らない。`version` は書かない（書くと、版を上げない限り利用者に commit が届かない）。
 
 ## ディレクトリの使い分け
 
@@ -64,6 +70,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
   - `frontmatter`: `uv run scripts/validate-internal-skills.py` で `.claude/skills/*/SKILL.md` のfrontmatter(YAMLとして読めること・name とディレクトリ名の一致・description の有無・`metadata.internal` が真偽値の `true` であること)を検証する。`gh skill` は隠しディレクトリを見ないため、ここだけ専用スクリプトを持つ
   - `distribution-gh`: `gh skill publish --dry-run` でagentskills.io仕様を検証する(`skills/*/SKILL.md` の name の命名規則・name とディレクトリ名の一致・name/description の有無)
   - `distribution-npx`: `scripts/check-npx-skills.sh` で、`npx skills` で入るskillが `skills/` 配下と過不足なく一致するかを見る(`.claude/skills/` の混入を検出する)
+  - `distribution-plugin`: `claude plugin validate --strict .` で `.claude-plugin/marketplace.json` を検証する。Claude Code の版は `CLAUDE_CODE_VERSION` で固定する
 - `.github/workflows/release.yml`(`main` へのpushで `skills/**` が変わったとき、または手動。手動でも `main` 以外では動かない): `scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグとReleaseを作る(タグを先にpushすると `publish` が既存タグとして拒否する)。版はPRタイトル(squash mergeのコミット件名)の種別で決まる。
 
 `gh` は `.github/actions/setup-gh` で版を固定して入れる(ランナー同梱の `gh` は版が固定されないため)。
@@ -72,6 +79,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 uv は `astral-sh/setup-uv` の `version` で、`validate-internal-skills.py` の依存(PyYAML)はスクリプト先頭のinline metadataで版を固定する。
 `rumdl`・`shuck`・`ryl` はそれぞれ公式の action(`rvben/rumdl`・`ewhauser/shuck-action`・`owenlamont/ryl-action`)で入れ、版は `ci.yml` で固定する。
 `npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。上の「npx skills CLIの構文」節を確かめた版と揃える。
+`claude plugin validate` に使う Claude Code の版は `ci.yml` の `CLAUDE_CODE_VERSION` で固定する。どちらも Dependabot は上げないので、必要なら手で上げる。
 
 ワークフローと composite action の `uses:` は、ローカルの action(`./` で始まるもの)を除き、公式の `actions/*` も含めて40桁のコミットSHAで固定する。
 タグはあとから別のコミットに付け替えられるため、タグ参照では action 本体の改ざんを防げない。
@@ -94,6 +102,7 @@ shuck check .
 shuck format --check .
 ryl check .
 ryl format --check --markdown .
+claude plugin validate --strict .
 ```
 
 新しいshellscriptを書いたら `shuck format <file>` で整形してからコミットする。

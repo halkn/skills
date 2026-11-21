@@ -1,0 +1,21 @@
+{
+  "name": "halkn-skills",
+  "description": "halkn/skills の skills/ 配下の Agent Skill を、1つのプラグインとして配布するマーケットプレイス",
+  "owner": {
+    "name": "halkn",
+    "url": "https://github.com/halkn"
+  },
+  "plugins": [
+    {
+      "name": "halkn",
+      "source": "./",
+      "description": "halkn/skills の skills/ 配下にある Agent Skill 一式",
+      "author": {
+        "name": "halkn"
+      },
+      "homepage": "https://github.com/halkn/skills",
+      "repository": "https://github.com/halkn/skills",
+      "license": "MIT"
+    }
+  ]
+}
