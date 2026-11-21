@@ -56,6 +56,14 @@ header a { color: var(--accent); }
 .bar button.primary { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .bar button:hover { background: var(--sel); }
 .said { color: var(--ok); font-size: 13px; }
+.said.failed { color: var(--block); }
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
 .note { margin: 6px 0 0; font-size: 13px; }
 #instruction {
   width: 100%; height: 120px; margin-top: 8px;
@@ -78,8 +86,12 @@ tr.row > td { padding: 8px; border-top: 1px solid var(--line); vertical-align: t
 tr.row { cursor: pointer; }
 tr.row:hover > td { background: var(--panel); }
 tr.row.current > td { background: var(--sel); }
-tr.row.current > td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
-td.num { width: 1%; white-space: nowrap; font-weight: 600; }
+tr.row > th.num {
+  width: 1%; white-space: nowrap; font-weight: 600; text-align: left;
+  padding: 8px; border-top: 1px solid var(--line); vertical-align: top;
+}
+tr.row:hover > th { background: var(--panel); }
+tr.row.current > th { background: var(--sel); box-shadow: inset 3px 0 0 var(--accent); }
 td.sev { width: 1%; white-space: nowrap; }
 td.loc { width: 1%; white-space: nowrap; color: var(--muted); font-size: 12px; }
 td.what .txt { font-weight: 500; }
@@ -148,7 +160,8 @@ table.reqs td.r-met { color: var(--ok); }
     <span id="verdict" class="verdict"></span>
     <span id="counts" class="counts"></span>
     <span class="spacer"></span>
-    <span id="said" class="said" hidden></span>
+    <!-- 通知の live region。hidden で出し入れすると支援技術から見えなくなるので、常に置いて文言だけ替える -->
+    <span id="said" class="said" role="status"></span>
     <button type="button" id="reset" hidden></button>
     <button type="button" id="copy" class="primary">指示文をコピー</button>
   </div>
@@ -161,7 +174,8 @@ table.reqs td.r-met { color: var(--ok); }
     <kbd>j</kbd>/<kbd>k</kbd> 移動　<kbd>1</kbd> 直す　<kbd>2</kbd> 確認　<kbd>3</kbd> Issue　<kbd>4</kbd> 対応しない　<kbd>Enter</kbd> 詳細と diff を開閉
   </p>
   <table class="findings">
-    <thead><tr><th>#</th><th>仕分け</th><th>severity</th><th>位置</th><th>指摘</th><th></th></tr></thead>
+    <caption class="visually-hidden">レビューの指摘と仕分け</caption>
+    <thead><tr><th scope="col">#</th><th scope="col">仕分け</th><th scope="col">severity</th><th scope="col">位置</th><th scope="col">指摘</th><th scope="col"><span class="visually-hidden">詳細</span></th></tr></thead>
     <tbody id="rows"></tbody>
   </table>
   <p id="no-findings" class="empty" hidden>指摘はありません</p>
@@ -263,7 +277,9 @@ table.reqs td.r-met { color: var(--ok); }
 
   findings.forEach(function (f, index) {
     var tr = el('tr', 'row');
-    tr.appendChild(el('td', 'num', numOf(f)));
+    var numCell = el('th', 'num', numOf(f));
+    numCell.scope = 'row';
+    tr.appendChild(numCell);
 
     var segCell = el('td');
     var seg = el('span', 'seg');
@@ -470,24 +486,49 @@ table.reqs td.r-met { color: var(--ok); }
 
   var box = document.getElementById('instruction');
   var said = document.getElementById('said');
+  var saidTimer = null;
+  var lastMessage = '';
+  function report(ok, message) {
+    clearTimeout(saidTimer);
+    // VoiceOver は直前と同じ文言を読まないので、繰り返しのときだけ見えない空白で変える
+    if (message === lastMessage) message += ' ';
+    lastMessage = message;
+    said.className = 'said' + (ok ? '' : ' failed');
+    said.textContent = message;
+    saidTimer = setTimeout(function () { said.textContent = ''; }, 4000);
+  }
+
+  // Clipboard API は secure context でしか使えず、file:// で開くこの画面ではたいてい無い。
+  // ページのプロトコルを選べないので、クリックの中で同期的に execCommand で書く
+  function legacyCopy(text) {
+    var field = document.createElement('textarea');
+    field.value = text;
+    field.setAttribute('readonly', '');
+    field.style.cssText = 'position:fixed;inset-block-start:0;opacity:0';
+    document.body.appendChild(field);
+    field.select();
+    try { return document.execCommand('copy'); } catch (e) { return false; } finally { field.remove(); }
+  }
+
   document.getElementById('copy').addEventListener('click', function () {
     var text = buildInstruction();
     box.value = text;
     box.hidden = false;
-    var fallback = function () {
+    var done = function () { report(true, 'コピーしました。Claude に貼り付けてください'); };
+    var failed = function () {
       box.focus();
       box.select();
-      said.textContent = '選択した文をコピーしてください';
-      said.hidden = false;
+      report(false, 'コピーできませんでした。選択した文をコピーしてください');
     };
-    // file:// で開いたときに Clipboard API が使えるかはブラウザによるので、失敗したら選択状態で渡す
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () {
-        said.textContent = 'コピーしました。Claude に貼り付けてください';
-        said.hidden = false;
-      }, fallback);
+    if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {
+        // 拒否のあとはクリックの中ではないので execCommand は効かない。選択状態で渡す
+        failed();
+      });
+    } else if (legacyCopy(text)) {
+      done();
     } else {
-      fallback();
+      failed();
     }
   });
 
