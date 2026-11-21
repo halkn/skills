@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## リポジトリの目的
 
 `halkn/skills` は、Claude Code用のAgent Skillを複数端末に配布・同期するためのリポジトリ。
-配布経路は `gh skill`(GitHub CLI)と `npx skills`(Vercelの Skills CLI、npmパッケージ `skills`)の2つ。
+配布経路は `gh skill`(GitHub CLI)と `npx skills`(Vercelの Skills CLI、npmパッケージ `skills`)の2つで、claude.ai・Cowork 向けにはプラグインマーケットプレイス(下記)を加えた3つ。
 検証・配布・更新は両CLIの機能(`publish`・`install`/`add`・`update`・版の固定)に任せ、リポジトリ側では
 再実装しない。リポジトリ側が持つのは、両CLIで同じskillが入ることを確かめるCIと、`skills/` の変更ごとに
 リリースを作るCDだけ。
@@ -79,6 +79,7 @@ skill品質をevalで検証したい場合は `skills/<name>/evals/evals.json` �
 uv は `astral-sh/setup-uv` の `version` で、`validate-internal-skills.py` の依存(PyYAML)はスクリプト先頭のinline metadataで版を固定する。
 `rumdl`・`shuck`・`ryl` はそれぞれ公式の action(`rvben/rumdl`・`ewhauser/shuck-action`・`owenlamont/ryl-action`)で入れ、版は `ci.yml` で固定する。
 `npx skills` の版は `ci.yml` の `SKILLS_CLI_VERSION` で固定する。上の「npx skills CLIの構文」節を確かめた版と揃える。
+`claude plugin validate` に使う Claude Code の版は `ci.yml` の `CLAUDE_CODE_VERSION` で固定する。どちらも Dependabot は上げないので、必要なら手で上げる。
 
 ワークフローと composite action の `uses:` は、ローカルの action(`./` で始まるもの)を除き、公式の `actions/*` も含めて40桁のコミットSHAで固定する。
 タグはあとから別のコミットに付け替えられるため、タグ参照では action 本体の改ざんを防げない。

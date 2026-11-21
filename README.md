@@ -56,6 +56,9 @@ npx skills add halkn/skills@v0.1.0 --global --agent claude-code --skill '*' --ye
 2. Add marketplace > Add from a repository で `halkn/skills` を追加する
 3. マーケットプレイス `halkn-skills` からプラグイン `halkn` を入れる
 
+claude.ai のチャットにはローカルの git リポジトリもシェルも無いため、そこで役に立つのは `handoff`（issue・設計書の本文を書く）です。
+`git-flow`・`review-report`・`session-retrospective` は、作業ツリーとシェル（`git`・`gh`・スクリプトの実行）を前提にしています。
+
 更新は、マーケットプレイスの「Check for updates」で手動で取り込むか、「Sync automatically」を有効にして自動で取り込みます。
 プラグインに `version` を書いていないので、`main` に commit が入るたびに新しい版として扱われます。
 

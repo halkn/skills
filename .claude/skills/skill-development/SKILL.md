@@ -10,7 +10,8 @@ metadata:
 # skill-development
 
 `halkn/skills` は、`gh skill`（GitHub CLI）と `npx skills`（Vercel の Skills CLI）の2経路で
-複数端末に Skill を配布・同期するためのリポジトリです。このドキュメントは、このリポジトリで
+複数端末に Skill を配布・同期するためのリポジトリです。claude.ai・Cowork 向けには、
+`.claude-plugin/marketplace.json` でプラグインマーケットプレイスとしても公開しています。このドキュメントは、このリポジトリで
 Skill を作る・育てる・配布するときの手順そのものです。人間が読む開発者向けドキュメント
 としても、Claude Code がこのリポジトリで作業する際にトリガーされる Skill としても機能します。
 
@@ -21,13 +22,14 @@ Skill を作る・育てる・配布するときの手順そのものです。�
 
 | 段階 | 仕組み | 定義 |
 |------|--------|------|
-| PR | `.claude/skills/` の frontmatter 検証、Markdown・shell・YAML の静的検査、`gh skill publish --dry-run`(`skills/` の frontmatter の検証を兼ねる)、`npx skills` で入るskillが `skills/` と一致するかの検査 | `.github/workflows/ci.yml` |
+| PR | `.claude/skills/` の frontmatter 検証、Markdown・shell・YAML の静的検査、`gh skill publish --dry-run`(`skills/` の frontmatter の検証を兼ねる)、`npx skills` で入るskillが `skills/` と一致するかの検査、`claude plugin validate --strict .` でのマーケットプレイスの検証 | `.github/workflows/ci.yml` |
 | main へのマージ | `skills/**` が変わったときだけ、`scripts/next-version.sh` で版を決め、`gh skill publish --tag` でタグと Release を作る | `.github/workflows/release.yml` |
 | 各端末 | `gh skill update --all` または `npx skills update --global --yes` を実行したときだけ反映される | README |
 
 - `gh skill` は版を指定しないと「最新のリリース → `main` の HEAD」、`npx skills` は `main` の HEAD を入れる。`skills/` の変更ごとにリリースするので、両者の内容は一致する。
 - `skills/` 以外（README・CI・`.claude/` など）だけの変更ではリリースしない。配布物が変わらないため。
 - `npx skills` は `skills/` に加えて `.claude/skills/` なども探索する。リポジトリ専用skillには frontmatter に `metadata.internal: true` を付けて配布対象から外す。付け忘れは `scripts/validate-internal-skills.py`(フック・CI の `frontmatter` ジョブ)と CI の `distribution-npx` ジョブで検出する。
+- プラグイン `halkn` はリポジトリ直下を指し、既定の `skills/` の走査で入る skill が決まる。リポジトリ直下に `bin/`・`commands/`・`agents/`・`hooks/` などプラグインの既定の置き場所を作ると、プラグインの中身が変わる（`bin/` があると claude.ai と Cowork が入れない）。`version` を書かないので、claude.ai には `main` の commit がそのまま届く。
 
 ### 版の決め方
 
@@ -116,6 +118,8 @@ CI（`.github/workflows/ci.yml`）の内容は CLAUDE.md の「CI/CD」節にあ
 
 各端末では、`gh skill` か `npx skills` のどちらか一方だけを使う。どちらも
 `~/.claude/skills/<name>` に入れるため、混ぜると片方の更新がもう片方の管理外のファイルを上書きする。
+claude.ai でプラグイン `halkn` を有効にすると、claude.ai のアカウントでサインインした Claude Code には
+`halkn@synced` として同期され、同じ skill が2つ読み込まれる。止め方は README の claude.ai の節にある。
 
 ```bash
 # gh skill: 初回 / 更新
