@@ -15,9 +15,11 @@
 ## リポジトリ専用skill(`.claude/skills/`)
 
 - `gh skill` は隠しディレクトリを既定でスキップするが、`npx skills` は `.claude/skills/` も探索する。
+
 - そのため `.claude/skills/<name>/SKILL.md` には次を付け、`npx skills` の一括インストール(`--skill '*'`)の対象から外す。
   `INSTALL_INTERNAL_SKILLS=1` を付けたとき、または `--skill <name>` で名前を明示したときは入る(skills 1.8.1 の `src/add.ts` で確認)。
   名前の明示までは防げないので、リポジトリ専用skillを端末に入れないのは利用者側の運用になる。
+
 - 値は YAML の真偽値 `true` にする。文字列の `"true"` を internal とみなさない版がある(1.7.4)。
 
   ```yaml
