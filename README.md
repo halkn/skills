@@ -3,7 +3,7 @@
 Claude Code 用の Agent Skill 群を一箇所で開発・レビューし、複数端末・複数ターミナルに配布・同期するための
 リポジトリです。配布経路は [`gh skill`](https://cli.github.com/manual/gh_skill)（GitHub CLI）と
 [`npx skills`](https://github.com/vercel-labs/skills)（Vercel の Skills CLI）の2つに対応しています。
-どちらで入れても同じ内容になります。
+どちらで入れても同じ内容になります。claude.ai・Cowork には、プラグインマーケットプレイスとして入れられます。
 
 ## インストール
 
@@ -46,6 +46,24 @@ npx skills add halkn/skills@v0.1.0 --global --agent claude-code --skill '*' --ye
 ```
 
 `npx skills` は匿名の利用統計を送ります。止めるときは `DISABLE_TELEMETRY=1` を付けてください。
+
+### claude.ai・Cowork（プラグインマーケットプレイス）
+
+このリポジトリは、`.claude-plugin/marketplace.json` でプラグインマーケットプレイス `halkn-skills` としても読めます。
+`skills/` 配下のすべての skill が、1つのプラグイン `halkn` に入っています（`.claude/skills/` のものは入りません）。
+
+1. claude.ai で Customize > Plugins > Personal plugins を開く
+2. Add marketplace > Add from a repository で `halkn/skills` を追加する
+3. マーケットプレイス `halkn-skills` からプラグイン `halkn` を入れる
+
+更新は、マーケットプレイスの「Check for updates」で手動で取り込むか、「Sync automatically」を有効にして自動で取り込みます。
+プラグインに `version` を書いていないので、`main` に commit が入るたびに新しい版として扱われます。
+
+claude.ai のアカウントでサインインした Claude Code では、claude.ai で有効にしたプラグインが `halkn@synced` として同期されます。
+そのため、同じ端末で `gh skill` か `npx skills` でも入れていると、同じ skill が2つ読み込まれます。どちらかを止めてください。
+
+- Claude Code への同期を止める: `~/.claude/settings.json` に `"syncClaudeAiPlugins": false` を書く
+- `gh skill`・`npx skills` で入れた skill を消し、同期されたプラグインだけを使う
 
 ### バージョンの決まり方
 

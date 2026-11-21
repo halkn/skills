@@ -1,0 +1,21 @@
+{
+  "name": "halkn-skills",
+  "description": "halkn/skills の skills/ 配下の Agent Skill を、1つのプラグインとして配布するマーケットプレイス",
+  "owner": {
+    "name": "halkn",
+    "url": "https://github.com/halkn"
+  },
+  "plugins": [
+    {
+      "name": "halkn",
+      "source": "./",
+      "description": "Git 作業手順（git-flow）、作業の引き継ぎ文と issue・設計書（handoff）、レビュー指摘の HTML レポート（review-report）、セッションの振り返り（session-retrospective）",
+      "author": {
+        "name": "halkn"
+      },
+      "homepage": "https://github.com/halkn/skills",
+      "repository": "https://github.com/halkn/skills",
+      "license": "MIT"
+    }
+  ]
+}
