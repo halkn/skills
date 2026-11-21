@@ -340,7 +340,12 @@ tr.hit td.n { font-weight: 700; }
       a.addEventListener('click', function () { show('findings'); select(f.id); });
       li.appendChild(a);
       li.appendChild(document.createTextNode(' — ' + (f.short_summary || '')));
-      if (withReason && f.disposition_reason) li.appendChild(el('div', 'hint', f.disposition_reason));
+      // 画面で ask に変えた指摘の disposition_reason は見送りの理由で、問いではない
+      if (withReason) {
+        li.appendChild(el('div', 'hint', f.disposition === 'ask' && f.disposition_reason
+          ? f.disposition_reason
+          : '確かめたいことは未記入（画面で「確認する」に変えた指摘）'));
+      }
       ul.appendChild(li);
     });
     return ul;

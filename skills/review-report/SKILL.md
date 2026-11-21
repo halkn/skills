@@ -35,6 +35,15 @@ argument-hint: '[pr-number | pr-url]'
 
 引数に PR 番号か PR の URL があれば **PR モード**、無ければ現在のブランチの **ローカルモード**。PR モードに入る前に `git remote -v` でホストを確認し、`github.com` 以外ならローカルモードに切り替えるかユーザーに確認する。
 
+PR モードでは、人間のレビューの inline コメントも取り込む。
+
+```bash
+gh api "repos/{owner}/{repo}/pulls/<number>/comments" \
+  --jq '.[] | {file: .path, line: (.line // .original_line), author: .user.login, body: .body}'
+```
+
+取れたコメントは Claude の指摘と同じく手順 3 で仕分け、同じ表に並べる。人間の指摘と Claude の指摘が同じ表に並ぶことが PR モードの主な価値なので、コメントが 0 件でなければ必ず入れる。解決済み（outdated）のコメントは入れない。
+
 ### 2. 要件と突合する
 
 対象の issue を探し、完了条件を 1 項目ずつ diff と照らす。探し方・照らし方・突合しないときの扱いは [references/triage.md](references/triage.md) の「要件との突合」にある。
@@ -47,7 +56,7 @@ argument-hint: '[pr-number | pr-url]'
 - **意図や仕様が断定できないものは推測で決めず `ask` にする。** 確かめたいことを 1 文で添える
 - **指摘は全件残す。** 対応しないものも落とさず `wont-fix` にする
 
-番号は severity 順（HIGH → LOW、同じ severity では `/code-review` の順）に `#1` から振る。HTML を作るときも同じ順で findings.json に書くので、番号はずれない。
+番号は、人間のコメントを含む全件を severity 順（HIGH → LOW。同じ severity の中は `/code-review` の指摘、人間のコメントの順）に並べて `#1` から振る。HTML を作るときも同じ順で findings.json に書く。順が崩れていると `render_review.py` が落とすので、番号はずれない。
 
 ### 4. 提示する
 
@@ -79,7 +88,7 @@ argument-hint: '[pr-number | pr-url]'
 
 ### 5. HTML にする（頼まれたときだけ）
 
-ユーザーに頼まれたときだけ、以下の 5-1 〜 5-6 で HTML を作る。頼まれていなければここで終わる。
+ユーザーに頼まれたときだけ、以下の 5-1 〜 5-5 で HTML を作る。頼まれていなければここで終わる。
 
 #### 5-1. 作業ディレクトリを決める
 
@@ -151,24 +160,13 @@ echo "base=${base:-なし（未コミット変更のみ）}"
 
 **未追跡ファイルは `git diff` に出ない。** 新規ファイルの指摘を「diff 外」にしないために、レビュー前にコミットしておく（git-flow の手順ではコミット・push の後にレビューするので、通常はこの条件を満たしている）。
 
-#### 5-3. PR モードなら人間のレビューも取り込む
+#### 5-3. findings.json を書く
 
-```bash
-gh api "repos/{owner}/{repo}/pulls/<number>/comments" \
-  --jq '.[] | {file: .path, line: (.line // .original_line), author: .user.login, body: .body}'
-```
-
-取れた inline コメントを `category: "human"`、`author` にログイン名を入れて findings に混ぜる。人間の指摘と Claude の指摘が同じ画面に並ぶことが PR モードの主な価値なので、コメントが 0 件でなければ必ず入れる。人間の指摘にも手順 3 の基準で仕分けを付ける。番号は Claude の指摘の後ろに続ける。
-
-解決済み（outdated）のコメントは入れない。
-
-#### 5-4. findings.json を書く
-
-`$work/findings.json` に書く。スキーマと書き起こしの規約は [references/findings-schema.md](references/findings-schema.md) にある。手順 3 の仕分けと手順 2 の要件の表を、提示した番号の順のまま移す。
+`$work/findings.json` に書く。スキーマと書き起こしの規約は [references/findings-schema.md](references/findings-schema.md) にある。手順 3 の仕分けと手順 2 の要件の表を、提示した番号の順のまま移す。手順 1 で取り込んだ人間のコメントは `category: "human"`、`author` にログイン名を入れる。
 
 `assessment.note` にマージ可否の**根拠**を短く書く。可否そのもの（「マージしてよい」等）は書かない。画面が仕分けから算出し、ユーザーが仕分けを変えれば追随するため、note に結論を書くと食い違う。
 
-#### 5-5. レンダリングして検証する
+#### 5-4. レンダリングして検証する
 
 ```bash
 python3 ${CLAUDE_SKILL_DIR}/scripts/render_review.py \
@@ -183,7 +181,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/validate_review.py \
 
 ブラウザで開くなら `--open` を足すか `open "$work/index.html"` を実行する。**ユーザーに頼まれない限り勝手に開かない。** sandbox が `open` を禁じている環境（macOS で Launch Services が塞がれ `-10822` 等で失敗する）では、`$work` を展開した絶対パスで `open <path>` を提示し、ユーザーに `!` 付きで実行してもらう。
 
-#### 5-6. 報告する
+#### 5-5. 報告する
 
 - HTML の絶対パス（`$work` を展開したもの。ユーザーが `!open <path>` で開くときに、どのディレクトリからでも使える）
 - 判定と、`fix-now`・`ask` の件数

@@ -4,7 +4,7 @@
 
 ## severity
 
-レビューが severity を出していればそのまま移す。出していない場合だけ、`failure_scenario` の実害から決める。
+`failure_scenario` の実害から次の 3 段階で決める。レビューが同じ 3 段階（`HIGH`/`MEDIUM`/`LOW`）で出していればそのまま移す。`/code-review` の `important`・`pre_existing`・`nit` は別の軸なので読み替えない。前の 2 つは今回の変更が持ち込んだか（`disposition` の判断材料）を表し、`nit` は軽微であることだけを表す。`nit` は `LOW` にしてよい。
 
 - `HIGH` — データの破壊・情報漏洩・不可逆な操作、または本番の主要な経路が壊れる
 - `MEDIUM` — 実際に踏む条件があり、踏むと誤った出力になる
@@ -18,6 +18,8 @@
 - `ask` — 意図や仕様が diff と issue から断定できず、ユーザーに確かめないと仕分けられないもの
 - `issue` — 実害はあるが、今回の変更に起因しない（既存バグ）か、修正が今回の範囲を超えて別 PR になるもの
 - `wont-fix` — 意図した挙動、実害が無視できる、または今回の設計判断として受け入れるもの
+
+`/code-review` が `pre_existing` とした指摘は既定で `issue` にする。ただし、今回の変更がその既存の振る舞いに新しく依存するようにしたなら `fix-now` にする。
 
 `issue`・`wont-fix` には `disposition_reason` に理由を 1 文で書く。`ask` には確かめたいことを 1 文で書く（無いと `render_review.py` が落とす）。
 
@@ -48,9 +50,11 @@ issue の完了条件を 1 項目ずつ diff と照らし、`findings.json` の 
 
 次の順に探し、最初に見つかったものを使う。
 
-1. PR モードなら PR 本文の `Closes #<n>` / `Fixes #<n>` / `Resolves #<n>`
-2. ブランチ名に含まれる issue 番号（`fix/42-...` など）
-3. ブランチのコミットメッセージの `#<n>`
+1. 会話でユーザーが着手を指示した issue（「#24 に着手して」など）
+2. PR モードなら、PR が close する issue。`gh pr view <n> --json closingIssuesReferences --jq '.closingIssuesReferences[] | "\(.number)"'` で取る
+3. `git log <base>..HEAD` のコミットメッセージにある `Closes #<n>` / `Fixes #<n>` / `Resolves #<n>`。`<base>` はブランチの分岐元（既定ブランチ）。範囲を付けないと、既定ブランチの squash commit の `(#63)` のような PR 番号を拾う
+
+裸の `#<n>` とブランチ名の数字は使わない。PR 番号や日付と区別できないため。
 
 見つかったら本文を取る。`gh` は単体で実行する。
 
@@ -58,7 +62,7 @@ issue の完了条件を 1 項目ずつ diff と照らし、`findings.json` の 
 gh issue view <n> --json body --jq .body
 ```
 
-見つからない、`github.com` 以外のホスト、複数の issue に当たって 1 つに決められないときは、突合をせず、しなかった理由を報告に書く。issue を推測で選ばない。
+見つからない、`github.com` 以外のホスト、`gh issue view` が失敗する（番号が PR だった場合を含む）、複数の issue に当たって 1 つに決められないときは、突合をせず、しなかった理由を報告に書く。issue を推測で選ばない。
 
 ### 照らし方
 

@@ -65,7 +65,7 @@
 | `failure_scenario` | | 失敗の再現条件 |
 | `outcome` | | 修正後の再報告でのみ `fixed` / `skipped` / `no_change_needed`。通常は `null` |
 | `author` | | `category: "human"` のとき、コメントした人の GitHub ログイン名 |
-| `severity` | ○ | `HIGH` / `MEDIUM` / `LOW`。レビューが severity を出していればそれを移す |
+| `severity` | ○ | `HIGH` / `MEDIUM` / `LOW`。`/code-review` の `important` などをそのまま書かない（[triage.md](triage.md) の「severity」） |
 | `disposition` | ○ | `fix-now` / `ask` / `issue` / `wont-fix` |
 | `disposition_reason` | | `issue` と `wont-fix` ではそう決めた理由を 1 文で。`ask` では確かめたいことを 1 文で書き、**必須**（無いと `render_review.py` が落とす） |
 

@@ -268,6 +268,9 @@ def build_payload(report, files):
         item["disposition"] = disposition
         if disposition == "ask" and not str(item.get("disposition_reason") or "").strip():
             problems.append(f"{where}: ask には確かめたいことを disposition_reason に書く")
+    ranks = [SEVERITIES.index(f["severity"]) for f in findings if f["severity"] in SEVERITIES]
+    if any(a > b for a, b in zip(ranks, ranks[1:])):
+        problems.append("findings が severity 順（HIGH → LOW）に並んでいない。番号がテキストの提示とずれる")
     requirements = normalize_requirements(report.get("requirements"), problems)
     if problems:
         raise ValueError("findings.json の値が不正です:\n  " + "\n  ".join(problems))
@@ -729,6 +732,17 @@ def _selftest_triage(files):
         files,
     )
     assert [f["number"] for f in numbered["findings"]] == [1, 2]
+
+    # 並びが severity 順でないと、テキストで severity 順に振った番号と HTML の番号が食い違う
+    try:
+        build_payload(
+            {"findings": [{**finding, "disposition": "issue"}, {**finding, "severity": "HIGH", "disposition": "issue"}]},
+            files,
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("severity 順でない findings で落ちていない")
 
     reqs = build_payload(
         {
