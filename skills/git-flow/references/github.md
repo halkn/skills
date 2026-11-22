@@ -42,6 +42,28 @@ gh pr create --title "<title>" --body-file <file> --base <branch>
 
 本文を渡す他の `gh` コマンド（`gh pr comment` / `gh issue create` / `gh pr edit`）にも同じ規則を適用する。
 
+## CI の結果を待つ
+
+PR を作ったら、チェックが終わるまで待って結果を報告する。
+
+```bash
+gh pr checks <番号> --watch
+```
+
+- バックグラウンドで実行でき、終わったら知らせを受けられる環境なら、バックグラウンドで実行する。前景の実行に時間の上限がある環境では、長い CI の結果を取りこぼす
+- `--fail-fast` は付けない。最初の失敗で抜けると他のチェックの結果が分からず、直す範囲を一度に判断できない
+- 終了コードは、全て pass なら 0、失敗があれば 1、pending のまま終わったら 8
+- `no checks reported on the '<branch>' branch` で終わったら、チェックがまだ登録されていないか、CI が無い。作成直後は workflow の登録が間に合わないことがあるので、少し時間を置いて一度だけ打ち直す。それでも同じなら待たずに「チェックが無い」と報告する
+- 失敗したチェックがあれば、原因の手がかりを 1 行添える。GitHub Actions のチェックは、`link` の `/actions/runs/<run id>/job/<job id>` から ID を取り、ログを見る。ログが空なら、check run の annotations を見る（runner が割り当てられなかったときなど、理由が annotations にだけ出る）。Actions 以外のチェックは `link` を添える
+
+```bash
+gh pr checks <番号> --json name,bucket,link --jq '.[] | "\(.bucket)\t\(.name)\t\(.link)"'
+gh run view <run id> --job <job id> --log-failed
+gh api 'repos/{owner}/{repo}/check-runs/<job id>/annotations' --jq '.[] | "\(.annotation_level)\t\(.message)"'
+```
+
+- 失敗した CI を直すか・再実行するかは、ユーザーに任せる。報告で止める
+
 ## issue の紐付け
 
 PR 本文に `Closes #123` / `Fixes #123` と書くと、マージ時に issue が自動 close される。単に参照したいだけなら `#123` を裸で書く（close されない）。
