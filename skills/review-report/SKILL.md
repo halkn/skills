@@ -98,7 +98,14 @@ gh api "repos/{owner}/{repo}/pulls/<number>/comments" \
 root=$(git rev-parse --show-toplevel) || exit 1
 work_root="$root/.scratch/review-report"
 if ! git check-ignore -q "$work_root/"; then
-  printf '%s\n' '/.scratch/' >>"$(git rev-parse --git-path info/exclude)"
+  mkdir -p "$root/.scratch" || exit 1
+  if [ ! -e "$root/.scratch/.gitignore" ]; then
+    printf '%s\n' '*' >"$root/.scratch/.gitignore" || exit 1
+  fi
+  if ! git check-ignore -q "$work_root/"; then
+    echo ".scratch/ を ignore させられませんでした" >&2
+    exit 1
+  fi
 fi
 work="$work_root/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$work"
@@ -112,7 +119,8 @@ echo "work=$work"
 
 シェル変数は Bash の呼び出しをまたいで残らない。以降の手順の `$work` は、ここで出力した `work=` の絶対パスに置き換えて書く。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
 
-- `.scratch/` が ignore されていなければ、`info/exclude` に足してから書く。ローカルだけの設定なので追跡されず、レポートが commit に混ざらない
+- `.scratch/` が ignore されていなければ、`.scratch/.gitignore` に `*` の 1 行を書いて ignore させる。作業木の中のファイルなので、linked worktree でも作業ディレクトリの外（本体のリポジトリの `.git/info/`）に触れない。`*` は `.gitignore` 自身にも一致するので、これも未追跡のファイルとして出ない
+- `.scratch/.gitignore` が既にあれば、上書きせず中身もそのままにする。ignore されたかは `git check-ignore -q` で確かめ、されていなければ `$work` を作らずに止まる。ignore されないまま `diff.patch` を置くと、レビュー対象のソースが commit に混ざり得る
 - `.scratch/review-report/` はこの skill の置き場で、今回の分を含めて新しい 10 件だけ残し、それより古いものは消す（`.scratch/` はセッションの終わりに消えず、`diff.patch` にはレビュー対象のソースがそのまま入るため）。`.scratch/` の他のファイルには触れない。手で消してもよい
 
 変数名を `base` にしない。次のステップが diff の基準 ref を `base` に入れるため、衝突すると基準 ref 無しのときの報告がパス文字列になる。
