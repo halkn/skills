@@ -24,7 +24,27 @@ allowed-tools: >
 - transcript のパス: 作業ディレクトリの中にあって読めるなら、コピーせずにそのまま下の `digest.sh` に渡す。読めなければ `recent <N>` と同じくコピーしてもらう。
 - `recent <N>`: 直近 N 件の過去のセッションを振り返る。transcript は `~/.claude/projects/<project>/<session>.jsonl` にあり、作業ディレクトリの外で読めないことが多い。置き場にコピーしてもらう。
 
-置き場は、セッションに scratchpad があっても作業木のルート（`git rev-parse --show-toplevel`）の `.scratch/session-retrospective/<日時>/` にする。下の `digest.sh` は Bash のコマンドに置き場のパスを書いて実行する。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない（Claude Code v2.1.326 で確認）。`.scratch/` はセッションの終わりに消えないので、実行ごとに `<日時>`（`date +%Y%m%d-%H%M%S`）で分け、前の実行で残ったコピーを今回の要約に混ぜない。`.scratch/` が ignore されていなければ、コピーを頼む前に `git rev-parse --git-path info/exclude` が示すファイルに `/.scratch/` を足す。
+置き場は、セッションに scratchpad があっても作業木のルート（`git rev-parse --show-toplevel`）の `.scratch/session-retrospective/<日時>/` にする。下の `digest.sh` は Bash のコマンドに置き場のパスを書いて実行する。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない（Claude Code v2.1.326 で確認）。`.scratch/` はセッションの終わりに消えないので、実行ごとに `<日時>`（`date +%Y%m%d-%H%M%S`）で分け、前の実行で残ったコピーを今回の要約に混ぜない。
+
+置き場に何かを書く前（コピーを頼む前）に、次で置き場を決め、`.scratch/` を ignore させる。以降の `<dir>` は、出力した `dir=` の絶対パスに置き換える。
+
+```bash
+root=$(git rev-parse --show-toplevel) || exit 1
+if ! git check-ignore -q "$root/.scratch/session-retrospective/"; then
+  mkdir -p "$root/.scratch" || exit 1
+  if [ ! -e "$root/.scratch/.gitignore" ]; then
+    printf '%s\n' '*' >"$root/.scratch/.gitignore" || exit 1
+  fi
+  if ! git check-ignore -q "$root/.scratch/session-retrospective/"; then
+    echo ".scratch/ を ignore させられませんでした" >&2
+    exit 1
+  fi
+fi
+echo "dir=$root/.scratch/session-retrospective/$(date +%Y%m%d-%H%M%S)"
+```
+
+- ignore は `.scratch/.gitignore` の `*` の 1 行で行う。作業木の中のファイルなので、linked worktree でも作業ディレクトリの外（本体のリポジトリの `.git/info/`）に触れない。`*` は `.gitignore` 自身にも一致するので、これも未追跡のファイルとして出ない
+- `.scratch/.gitignore` が既にあれば、上書きせず中身もそのままにする。上の shell が 0 以外で終わったら、コピーを頼まずに止まって報告する。ignore されないまま transcript のコピーを置くと、セッションの中身が commit に混ざり得る
 
 ユーザーに、`!` を付けて次を実行するよう頼む（`<dir>` は置き場の絶対パス、`<N>` は件数に置き換えて示す）。
 
