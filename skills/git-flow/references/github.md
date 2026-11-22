@@ -23,7 +23,9 @@ gh pr create --title "<title>" --body-file <file> --base <branch>
 ```
 
 - `--base` は省略するとリポジトリの既定ブランチ。既定ブランチ以外へ向けるときだけ明示する
-- 本文はファイルに書いて `--body-file` で渡す。`--body` に長い文字列を渡すと改行やバッククォートのエスケープで壊れやすい。`--body "$(cat <<EOF ...)"` は使わない（`SKILL.md` の実行形の規則に反する）
+- 本文はファイルに書いて `--body-file` で渡す。`--body` に直接渡さない。`--body "$(cat <<EOF ...)"` も使わない（`SKILL.md` の実行形の規則に反する）
+  - 理由: 改行かバッククォートを含む引数があると、引用符の中でも sandbox の除外が外れ、`gh` が sandbox の中で動いて通信や認証情報の読取に失敗する環境がある。Markdown の本文にはほぼ必ずバッククォートが入るので、エスケープを正しく書いても避けられない
+- `--title` にはバッククォートを書かない。理由は `--body` と同じで、1 行でも除外が外れる
 - 本文ファイルは、セッションの環境の案内（system prompt の Environment）に scratchpad のパスがあれば、scratchpad に書き、その絶対パスを `--body-file` に渡す
   - 理由: scratchpad はファイル書き込みツール・sandbox の内と外のどれからも同じ絶対パスで読め、リポジトリに置き場所も ignore の設定も要らない
   - scratchpad のパスは環境の案内から取る。`$TMPDIR` や環境変数から組み立てたパスは、scratchpad の代わりにしない
