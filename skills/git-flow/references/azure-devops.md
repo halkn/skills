@@ -37,7 +37,7 @@ az repos pr create --title "<title>" --description "@<本文ファイル>" --sou
 ```
 
 - `--source-branch` は作業ブランチを明示する。`--target-branch` は省略するとリポジトリの既定ブランチ。既定ブランチ以外へ向けるときだけ明示する
-- 本文はファイルに書き、Azure CLI の `@<file>` の形で `--description` に渡す。`--description` に文字列を直接渡すと、値ごとに 1 行になり、改行やバッククォートのエスケープで壊れやすい
+- 本文はファイルに書き、Azure CLI の `@<file>` の形で `--description` に渡す。`--description` に文字列を直接渡すと、値ごとに 1 行になる。改行かバッククォートを含む引数で sandbox の除外が外れる点も `gh` と同じ（`references/github.md` の「PR 作成」）
   - 本文ファイルの置き場所・ファイル名・作り方は、`references/github.md` の「PR 作成」の本文ファイルの規則と同じにする。`--body-file` を `--description "@<本文ファイル>"` に読み替える
   - `az` は `@` の後ろの相対パスをカレントディレクトリから解く。相対パスで渡すときは、`az` をリポジトリのルートで実行する（`git rev-parse --show-toplevel` が現在地と一致する）
   - `@` の後ろのファイルが読めないと、Azure CLI はエラーにせず `@<本文ファイル>` という文字列をそのまま本文にする。作成後の読み返しで必ず確かめる
