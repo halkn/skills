@@ -1,0 +1,63 @@
+{
+  "skill_name": "dev-docs",
+  "evals": [
+    {
+      "id": 1,
+      "name": "runbook-ado-wiki",
+      "prompt": "Azure DevOps のコード Wiki（このフォルダが Wiki のルート）に、注文バッチを手で再実行する Runbook を書いて。分かっていること: 失敗したら Teams の #order-alerts に 'order-batch failed' が出る。再実行は踏み台から `az batch job create --template order-batch.json --parameters date=<YYYY-MM-DD>`。対象日は失敗の通知に書いてある。再実行の前に、Storage の orders/<日付>/ に _SUCCESS が無いことを確かめる（あれば二重に取り込むので再実行しない）。2 回続けて失敗したらデータ基盤の当番（@data-oncall）に連絡する。",
+      "expected_output": "Runbook の型（使う場面・前提・手順・確かめる・切り戻す/連絡先）で、見出しは項目名、手順は番号付きの箇条書きで1つに1動作。_SUCCESS の有無での分かれを手順の中に書き、図を入れるなら ```mermaid と graph で書く。ファイルを Wiki のファイル名の決まりで置き、.order に足す。yomiyasu が無ければ推敲を飛ばしたと報告する。",
+      "files": [],
+      "expectations": [
+        "[critical] 節の見出しが項目名（「前提」「再実行する」「連絡先」のような名詞か動詞で終わる短い句）で、結論の文になっていない",
+        "[critical] 再実行の手順が番号付きの箇条書きで、1つの番号に動作が1つ",
+        "_SUCCESS があるときは再実行しない分かれが、手順の中に書かれている",
+        "Mermaid を入れた場合は ```mermaid のコードブロックで書き（::: mermaid を使わない）、流れの図を flowchart ではなく graph で書いている（入れていなければ満たす）",
+        "本文が「である調」で、「〜しましょう」を使っていない",
+        "ファイル名に空白が無く（空白は - ）、同じフォルダの .order にページを足している",
+        "依頼に無い値（ジョブ名・リソース名・コマンドのオプション）を作って断定していない"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "design-doc-github",
+      "prompt": "GitHub の docs/ に、注文の通知を作り直す設計書を書いて。決まったこと: 注文 API は注文を確定したら Service Bus のキュー order-events にイベントを送るだけにする（今は API から直接メールを送っていて、メールのサーバーが遅いと注文 API も遅くなる）。通知のワーカーがキューを読んで、メールと Teams に送る。送れなかったイベントは 3 回まで再試行し、だめならデッドレターに入れて当番が見る。メールのサーバーはそのまま使う。採らなかった案: API の中で非同期のスレッドから送る案（API を再起動すると送る前のものが消える）。",
+      "expected_output": "設計書の型で、冒頭の要約のあと、節の見出しを結論の1文にする。最初の節に構成の図（Container diagram 相当）を ```mermaid で入れ、矢印に渡すものを書く。やりとり（再試行とデッドレター）を Sequence diagram か状態の図で示し、採らなかった案を理由付きで書く。",
+      "files": [],
+      "expectations": [
+        "[critical] 節の見出しが結論の1文（例:「注文 API はイベントを送るだけにし、通知はワーカーが送る」）で、「構成」「通知」のような題名だけになっていない（「決めていないこと」「参照」のような役割の節は除く）",
+        "[critical] 最初の節に構成の図が ```mermaid のコードブロックで入っている",
+        "構成の図の矢印に、渡すもの（イベント、メール、通知など）が書かれている",
+        "再試行とデッドレターの流れが図（sequenceDiagram・stateDiagram・flowchart のいずれか）で示されている",
+        "採らなかった案（API の中の非同期スレッド）と、採らなかった理由が書かれている",
+        "本文が「である調」"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "design-doc-ado-mermaid",
+      "prompt": "ADO の Wiki に載せる設計書を書いて。内容: 売上の日次集計を Snowflake の Task で動かす。生データは S3 から Snowpipe で RAW に入り、Task が毎朝 6 時に RAW から MART の日次売上テーブルを作る。BI は MART だけを読む。失敗したら Task のエラー通知が Teams に飛ぶ。",
+      "expected_output": "設計書の型で、見出しを結論の1文にし、構成の図を ```mermaid のコードブロックと graph で書く。C4 系など ADO で表示できない種類を使わない。",
+      "files": [],
+      "expectations": [
+        "[critical] Mermaid の図が ```mermaid のコードブロックで書かれ、::: mermaid を使っていない",
+        "[critical] 流れの図が flowchart ではなく graph で書かれ、C4Context・C4Container・architecture-beta・block-beta を使っていない",
+        "節の見出しが結論の1文になっている（役割の節は除く）",
+        "構成の図の矢印に、渡すもの（Snowpipe、Task、SELECT など）が書かれている"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "no-yomiyasu",
+      "prompt": "この README を書き直して。今の README.md は「このツールは CSV を読み込んで、色々なチェックをして、結果を出力するためのものです。使うには、まず uv sync をしてから、uv run csvcheck <ファイル> とすれば動きます。設定は csvcheck.toml に書けて、必須の列や型を指定できます。開発するときは uv run pytest でテストが動きます。」の1段落だけ。",
+      "expected_output": "README の型で項目名の見出し（前提・インストール・使い方・設定・開発）に分け、手順を番号付きにする。yomiyasu が skill の一覧に無いので推敲を飛ばし、そのことを報告に書く。作業は止めない。",
+      "files": [],
+      "expectations": [
+        "[critical] yomiyasu が入っていないため推敲を飛ばしたことを、報告に書いている",
+        "[critical] 推敲を飛ばしても README を書き終えている（yomiyasu を入れるよう求めて止まっていない）",
+        "見出しが項目名（「インストール」「使い方」「設定」「開発」など）",
+        "インストールの手順が番号付きの箇条書き",
+        "依頼に無い設定項目やオプションを作って断定していない"
+      ]
+    }
+  ]
+}

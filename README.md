@@ -58,6 +58,7 @@ npx skills add halkn/skills@v0.1.0 --global --agent claude-code --skill '*' --ye
 
 claude.ai のチャットにはローカルの git リポジトリもシェルも無いため、そこで役に立つのは `handoff`（issue・設計書の本文を書く）です。
 `git-flow`・`review-report`・`session-retrospective` は、作業ツリーとシェル（`git`・`gh`・スクリプトの実行）を前提にしています。
+`dev-docs` は Claude Code で作業ツリーの文書を書く前提で作っています。
 
 更新は、マーケットプレイスの「Check for updates」で手動で取り込むか、「Sync automatically」を有効にして自動で取り込みます。
 プラグインに `version` を書いていないので、`main` に commit が入るたびに新しい版として扱われます。
@@ -92,6 +93,7 @@ npx skills add halkn/skills --global --agent claude-code --skill handoff --yes
 
 | 名前 | 説明 |
 |------|------|
+| [dev-docs](skills/dev-docs/SKILL.md) | 人が読むリポジトリの文書（Azure DevOps Wiki・GitHub の設計書・ADR・Runbook・README）を、種類ごとの型と見出しの方針で書き、開発の図を Mermaid で入れ、文の推敲を内部で [yomiyasu](https://github.com/nanaism/yomiyasu) に任せる。yomiyasu は同梱せず、入っていなければ推敲を飛ばす |
 | [git-flow](skills/git-flow/SKILL.md) | ブランチ作成→コミット→push→PR作成→マージのGit作業手順（GitHub は gh、Azure DevOps は az repos）。それ以外のリモートではユーザーに確認する |
 | [handoff](skills/handoff/SKILL.md) | 作業を別のセッション・別のリポジトリ・issue・設計書に引き継ぐ文を書く。行き先を選び、今すぐ続けるセッションには貼り付ける引き継ぎ文を、後で着手する作業には実装計画として使える issue・設計書を書く。GitHub 以外やチャットでの本文作成にも対応 |
 | [review-report](skills/review-report/SKILL.md) | `/code-review` の指摘を仕分け（今回直す・確認する・Issue に切る・対応しない）、issue の完了条件と照らしてマージ可否を出す。頼まれれば該当 diff と並べた1枚のHTMLレポートにする。レビュー自体は行わない |
