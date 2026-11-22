@@ -15,6 +15,9 @@ claude.ai・Cowork 向けには、`.claude-plugin/marketplace.json` でリポジ
 `skills/` 配下だけが入る（`.claude/skills/` は入らない）。そのため `skills/` の配置を変えない、リポジトリ直下に
 `bin/`（claude.ai と Cowork が入れないプラグインになる）・`commands/`・`agents/`・`hooks/` などプラグインの
 既定の置き場所を作らない。`version` は書かない（書くと、版を上げない限り利用者に commit が届かない）。
+プラグイン `halkn` のエントリには `"strict": false` を付け、`.claude-plugin/plugin.json` は置かない。
+claude.ai・Cowork のマーケットプレイス同期は、`strict` が既定の `true` のまま plugin.json が無いプラグインを拒否する（CLI は通るので `claude plugin validate` では検出できない。anthropics/claude-code#91933）。
+plugin.json を置く回避策もあるが、`version` が無いと `claude plugin validate --strict` の警告になり CI が落ちる。
 
 ## ディレクトリの使い分け
 

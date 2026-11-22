@@ -9,6 +9,7 @@
     {
       "name": "halkn",
       "source": "./",
+      "strict": false,
       "description": "halkn/skills の skills/ 配下にある Agent Skill 一式",
       "author": {
         "name": "halkn"
