@@ -7,7 +7,8 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 version="${1:-${SKILLS_CLI_VERSION:-latest}}"
 
-work="$(mktemp -d)"
+# BSD (macOS) の mktemp はテンプレートが無いと TMPDIR を見ないため、sandbox が書込を許す TMPDIR を明示する。
+work="$(mktemp -d "${TMPDIR:-/tmp}/check-npx-skills.XXXXXX")"
 trap 'rm -rf "${work}"' EXIT
 
 export DISABLE_TELEMETRY=1
