@@ -1,0 +1,18 @@
+[
+  {"query": "ADO Wiki に載せる、注文バッチの再処理の仕組みの設計書を書いて", "should_trigger": true},
+  {"query": "この Runbook を書き直して。夜間の当番が読んでも手順が追えるようにしたい", "should_trigger": true},
+  {"query": "このリポジトリの README を書いて", "should_trigger": true},
+  {"query": "さっき決めた、認証を API Gateway でまとめる判断を ADR にして", "should_trigger": true},
+  {"query": "障害対応の手順書を Wiki にまとめて。今は Slack のスレッドにしか無い", "should_trigger": true},
+  {"query": "docs/design.md が長い散文で読みにくいので、見出しと図で拾い読みできる設計書に直して", "should_trigger": true},
+  {"query": "データ連携の構成を、チームが読む設計書として Azure DevOps の Wiki に書いておいて", "should_trigger": true},
+  {"query": "README のインストール手順を、初めて使う人向けに書き直して", "should_trigger": true},
+  {"query": "Claude Code に実装を依頼する Issue を書いて", "should_trigger": false},
+  {"query": "PR にして", "should_trigger": false},
+  {"query": "上司に見せる説明資料を HTML で作って", "should_trigger": false},
+  {"query": "この文章を yomiyasu で推敲して", "should_trigger": false},
+  {"query": "この変更の PR の本文を書いて", "should_trigger": false},
+  {"query": "これを issue にして", "should_trigger": false},
+  {"query": "この設計書を読んで、要点を 3 行で教えて", "should_trigger": false},
+  {"query": "続きは dotfiles 側でやるけど、向こうで何と伝えれば", "should_trigger": false}
+]
