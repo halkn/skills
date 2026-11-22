@@ -96,6 +96,33 @@
         "--bypass-policy と --auto-complete を使っていない",
         "マージ後に az repos pr show で status が completed になったことを確かめている"
       ]
+    },
+    {
+      "id": 8,
+      "name": "pr-then-ci-report",
+      "prompt": "origin は GitHub。変更をコミットして push して PR を作って。",
+      "expected_output": "PR を作った後、gh pr checks <番号> --watch を単独のコマンドで実行して(できればバックグラウンドで)チェックが終わるまで待ち、PR の URL と一緒に CI の成否を報告する。失敗したチェックがあれば名前と、ログ(空なら check run の annotations)から取った原因の手がかりを添える。チェックが見えなければ一度だけ打ち直し、それでも無ければ待たずにそう報告する。マージはしない。",
+      "files": [],
+      "expectations": [
+        "PR 作成後に gh pr checks で CI のチェックが終わるまで待っている(PR の URL の報告だけで止まっていない)",
+        "gh pr checks を前置き・パイプ・ループなしの単独のコマンドで実行している",
+        "--fail-fast を付けていない",
+        "報告に PR の URL と CI の成否が含まれ、失敗したチェックがあればその名前と原因の手がかりが含まれる",
+        "CI が通っても失敗しても、依頼に無いマージ・再実行・修正の commit をしていない"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "merge-if-ci-passes-fails",
+      "prompt": "origin は GitHub。PR 12 の CI が通ったら squash でマージして。(gh pr checks 12 の結果: lint が fail、test が pass)",
+      "expected_output": "CI の成功を条件にした明示のマージ依頼として扱い、gh pr checks 12 でチェックを確かめる。lint が失敗しているので条件を満たさず、マージせずに、失敗した lint の名前と原因の手がかりを報告する。",
+      "files": [],
+      "expectations": [
+        "gh pr checks 12 で CI の状態を確かめている",
+        "失敗したチェックがあるので gh pr merge を実行していない",
+        "失敗したチェック(lint)の名前を報告している",
+        "依頼に無い再実行・修正の commit をしていない"
+      ]
     }
   ]
 }
