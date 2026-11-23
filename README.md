@@ -75,20 +75,6 @@ claude.ai のアカウントでサインインした Claude Code では、claude
 版を指定しない場合、`gh skill` は最新のリリース、`npx skills` は `main` の HEAD を入れますが、
 `skills/` の変更ごとにリリースするので、両者の内容は一致します。
 
-### issue-writing から handoff への入れ直し
-
-`issue-writing` は `handoff` に改名しました。更新（`update`）では新しい名前の skill は入らないので、入れ直してください。
-
-```bash
-# gh skill（削除のサブコマンドが無いので、古いディレクトリは手で消す）
-gh skill install halkn/skills skills/handoff --agent claude-code --scope user
-rm -r ~/.claude/skills/issue-writing
-
-# npx skills
-npx skills remove --global --agent claude-code issue-writing --yes
-npx skills add halkn/skills --global --agent claude-code --skill handoff --yes
-```
-
 ## 保有スキル一覧
 
 | 名前 | 説明 |
