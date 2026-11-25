@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+      - uses: astral-sh/setup-uv@1db35dd8eee11c5894872e0b383ae6c406cf738d  # v10.4.0
         with:
           version: 0.13.8
           enable-cache: false
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-      - uses: rvben/rumdl@0d3d6e4f07c585a9433df162949ca0fe280a40dd  # v0.3.4
+      - uses: rvben/rumdl@ba563d6780c6119bd526c869a730b492c1ad54e5  # v0.3.5
         with:
           version: 0.3.5
           report-type: annotations
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       # action の版が ryl の版を固定する(version の既定値が action の版と同じ版)。
-      - uses: owenlamont/ryl-action@d1a3c7c9942a41ef9aa6c10b8e03f464ecdaf085  # v0.29.0
+      - uses: owenlamont/ryl-action@dcde2372477893a97407839dfa0576b6d9ebf0bd  # v0.30.0
         with:
           install-only: true
       - name: Lint YAML
