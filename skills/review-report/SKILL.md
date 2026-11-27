@@ -115,7 +115,7 @@ done
 echo "work=$work"
 ```
 
-置き場は、セッションに scratchpad があっても作業木のルートの中の `.scratch/review-report/` にする。以降の手順は Bash のコマンドに `$work` のパスを書いて読み書きする。作業ディレクトリの外のパス（scratchpad を含む）を Bash のコマンドに書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない（Claude Code v2.1.326 で確認）。
+置き場は、セッションに scratchpad があっても作業木のルートの中の `.scratch/review-report/` にする。以降の手順は Bash のコマンドに `$work` のパスを書いて読み書きする。sandbox の中で動く Bash のコマンドに作業ディレクトリの外のパス（scratchpad を含む）を書くと、`permissions.blockReadsOutsideWorkingDirectories` を有効にした環境では auto モードでも毎回確認が出る。sandbox の外で動くよう除外したコマンド（`gh` など）に渡す scratchpad の絶対パスは確認にならないが、ここで使うのは sandbox の中で動くコマンドなので当てはまらない。環境変数から組んだパスでも同じなので、`$TMPDIR` や `/tmp` にもしない。
 
 シェル変数は Bash の呼び出しをまたいで残らない。以降の手順の `$work` は、ここで出力した `work=` の絶対パスに置き換えて書く。作業木ごとに `.scratch/` が分かれるので、同じリポジトリの複数 worktree のレポートも混ざらない。
 
